@@ -8,7 +8,13 @@ export const useQuestions = () => {
   useEffect(() => {
     const savedQuestions = localStorage.getItem("interviewQuestions");
     if (savedQuestions) {
-      setQuestions(JSON.parse(savedQuestions));
+      const parsedQuestions = JSON.parse(savedQuestions);
+      // Add default category to existing questions that don't have it
+      const questionsWithCategory = parsedQuestions.map((q: Question) => ({
+        ...q,
+        category: q.category || 'other'
+      }));
+      setQuestions(questionsWithCategory);
     }
   }, []);
 

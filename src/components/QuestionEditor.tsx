@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Save, X, Play } from "lucide-react";
 import { Question } from "@/types/Question";
 import { CodeEditor } from "./CodeEditor";
+import { CATEGORIES } from "@/utils/categories";
 
 interface QuestionEditorProps {
   question?: Question;
@@ -21,6 +22,7 @@ export const QuestionEditor = ({ question, onSave, onCancel }: QuestionEditorPro
   const [answer, setAnswer] = useState(question?.answer || "");
   const [code, setCode] = useState(question?.code || "");
   const [language, setLanguage] = useState(question?.language || "javascript");
+  const [category, setCategory] = useState(question?.category || "javascript");
   const [output, setOutput] = useState("");
   const [isRunning, setIsRunning] = useState(false);
 
@@ -31,7 +33,8 @@ export const QuestionEditor = ({ question, onSave, onCancel }: QuestionEditorPro
       title: title.trim(),
       answer: answer.trim(),
       code: code.trim(),
-      language
+      language,
+      category
     });
   };
 
@@ -106,6 +109,22 @@ export const QuestionEditor = ({ question, onSave, onCancel }: QuestionEditorPro
               placeholder="Enter your interview question..."
               className="mt-1"
             />
+          </div>
+
+          <div>
+            <Label htmlFor="category">Category</Label>
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger className="mt-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORIES.map((cat) => (
+                  <SelectItem key={cat.value} value={cat.value}>
+                    {cat.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>

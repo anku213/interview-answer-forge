@@ -9,6 +9,7 @@ import { Question } from "@/types/Question";
 const Index = () => {
   const { questions, addQuestion, updateQuestion, deleteQuestion } = useQuestions();
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const [isEditing, setIsEditing] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | undefined>();
 
@@ -64,6 +65,8 @@ const Index = () => {
             onEdit={handleEditQuestion}
             onDelete={handleDeleteQuestion}
             searchTerm={searchTerm}
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
           />
         )}
       </main>
