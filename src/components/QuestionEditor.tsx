@@ -35,26 +35,56 @@ export const QuestionEditor = ({ question, onSave, onCancel }: QuestionEditorPro
     });
   };
 
+  const executeJavaScript = (code: string) => {
+    try {
+      // Capture console.log output
+      const logs: string[] = [];
+      const originalLog = console.log;
+      console.log = (...args) => {
+        logs.push(args.map(arg => 
+          typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+        ).join(' '));
+      };
+
+      // Execute the code
+      const result = eval(code);
+      
+      // Restore original console.log
+      console.log = originalLog;
+      
+      // Return logs or result
+      if (logs.length > 0) {
+        return logs.join('\n');
+      } else if (result !== undefined) {
+        return typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result);
+      } else {
+        return 'Code executed successfully (no output)';
+      }
+    } catch (error) {
+      console.log = console.log;
+      return `Error: ${error.message}`;
+    }
+  };
+
   const handleRunCode = async () => {
     if (!code.trim()) return;
     
     setIsRunning(true);
+    setOutput("");
+    
     try {
-      // Simulate code execution for demo
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Add a small delay to show the running state
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       if (language === "javascript") {
-        try {
-          const result = eval(code);
-          setOutput(String(result));
-        } catch (error) {
-          setOutput(`Error: ${error.message}`);
-        }
+        const result = executeJavaScript(code);
+        setOutput(result);
       } else {
-        setOutput(`Code executed successfully in ${language}`);
+        // For other languages, show a simulation message
+        setOutput(`Code simulation for ${language}:\nCode executed successfully!\nNote: Only JavaScript execution is currently supported in the browser.`);
       }
     } catch (error) {
-      setOutput(`Error: ${error.message}`);
+      setOutput(`Execution Error: ${error.message}`);
     } finally {
       setIsRunning(false);
     }
@@ -124,7 +154,7 @@ export const QuestionEditor = ({ question, onSave, onCancel }: QuestionEditorPro
             <Button 
               onClick={handleRunCode} 
               disabled={!code.trim() || isRunning}
-              className="animate-code-run"
+              className="bg-green-600 hover:bg-green-700 text-white"
             >
               <Play className="h-4 w-4 mr-2" />
               {isRunning ? "Running..." : "Run Code"}
@@ -132,17 +162,22 @@ export const QuestionEditor = ({ question, onSave, onCancel }: QuestionEditorPro
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <CodeEditor
-            value={code}
-            onChange={setCode}
-            language={language}
-          />
+          <div>
+            <Label>Code Editor</Label>
+            <div className="mt-1">
+              <CodeEditor
+                value={code}
+                onChange={setCode}
+                language={language}
+              />
+            </div>
+          </div>
           
           {output && (
             <div>
               <Label>Output</Label>
-              <div className="mt-1 p-3 bg-editor rounded border border-editor-border">
-                <pre className="text-sm text-editor-foreground font-mono whitespace-pre-wrap">
+              <div className="mt-1 p-3 bg-gray-100 rounded border border-gray-300 min-h-[100px]">
+                <pre className="text-sm text-black font-mono whitespace-pre-wrap">
                   {output}
                 </pre>
               </div>

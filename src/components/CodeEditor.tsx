@@ -77,7 +77,7 @@ vector<int> twoSum(vector<int>& nums, int target) {
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={getPlaceholder(language)}
-      className="code-editor min-h-[300px] resize-none font-mono text-sm"
+      className="min-h-[300px] resize-none font-mono text-sm bg-white text-black border border-input rounded-md p-4 focus:outline-none focus:ring-2 focus:ring-ring"
       spellCheck={false}
     />
   );
