@@ -5,29 +5,39 @@ import { QuestionList } from "@/components/QuestionList";
 import { QuestionEditor } from "@/components/QuestionEditor";
 import { useSupabaseQuestions, SupabaseQuestion } from "@/hooks/useSupabaseQuestions";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { Question } from "@/types/Question";
 
 const Index = () => {
   const { questions, loading, addQuestion, updateQuestion, deleteQuestion } = useSupabaseQuestions();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [isEditing, setIsEditing] = useState(false);
-  const [editingQuestion, setEditingQuestion] = useState<SupabaseQuestion | undefined>();
+  const [editingQuestion, setEditingQuestion] = useState<Question | undefined>();
 
   const handleNewQuestion = () => {
     setEditingQuestion(undefined);
     setIsEditing(true);
   };
 
-  const handleEditQuestion = (question: SupabaseQuestion) => {
+  const handleEditQuestion = (question: Question) => {
     setEditingQuestion(question);
     setIsEditing(true);
   };
 
-  const handleSaveQuestion = async (questionData: Omit<SupabaseQuestion, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => {
+  const handleSaveQuestion = async (questionData: Omit<Question, 'id' | 'createdAt' | 'updatedAt' | 'userId'>) => {
+    // Convert Question format to SupabaseQuestion format for the API
+    const supabaseQuestionData = {
+      title: questionData.title,
+      answer: questionData.answer,
+      code: questionData.code,
+      language: questionData.language,
+      category: questionData.category
+    };
+
     if (editingQuestion) {
-      await updateQuestion(editingQuestion.id, questionData);
+      await updateQuestion(editingQuestion.id, supabaseQuestionData);
     } else {
-      await addQuestion(questionData);
+      await addQuestion(supabaseQuestionData);
     }
     setIsEditing(false);
     setEditingQuestion(undefined);
@@ -45,7 +55,7 @@ const Index = () => {
   };
 
   // Convert SupabaseQuestion to Question format for existing components
-  const convertedQuestions = questions.map(q => ({
+  const convertedQuestions: Question[] = questions.map(q => ({
     id: q.id,
     title: q.title,
     answer: q.answer,
