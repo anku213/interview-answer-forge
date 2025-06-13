@@ -6,14 +6,15 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Save, X, Play } from "lucide-react";
+import { Save, X, Play, Sparkles } from "lucide-react";
 import { Question } from "@/types/Question";
 import { CodeEditor } from "./CodeEditor";
 import { CATEGORIES } from "@/utils/categories";
+import { useGeminiAI } from "@/hooks/useGeminiAI";
 
 interface QuestionEditorProps {
   question?: Question;
-  onSave: (question: Omit<Question, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  onSave: (question: Omit<Question, 'id' | 'createdAt' | 'updatedAt' | 'userId'>) => void;
   onCancel: () => void;
 }
 
@@ -25,6 +26,7 @@ export const QuestionEditor = ({ question, onSave, onCancel }: QuestionEditorPro
   const [category, setCategory] = useState(question?.category || "javascript");
   const [output, setOutput] = useState("");
   const [isRunning, setIsRunning] = useState(false);
+  const { generateSolution, loading: aiLoading } = useGeminiAI();
 
   const handleSave = () => {
     if (!title.trim()) return;
@@ -93,6 +95,25 @@ export const QuestionEditor = ({ question, onSave, onCancel }: QuestionEditorPro
     }
   };
 
+  const handleGetAISolution = async () => {
+    if (!title.trim()) {
+      return;
+    }
+
+    const solution = await generateSolution({
+      title,
+      language,
+      category,
+      existingCode: code || undefined,
+      existingAnswer: answer || undefined
+    });
+
+    if (solution) {
+      // Parse the AI solution and update the answer field
+      setAnswer(solution);
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
       <Card>
@@ -143,7 +164,19 @@ export const QuestionEditor = ({ question, onSave, onCancel }: QuestionEditorPro
           </div>
 
           <div className="flex-1">
-            <Label htmlFor="answer">Answer</Label>
+            <div className="flex items-center justify-between mb-2">
+              <Label htmlFor="answer">Answer</Label>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleGetAISolution}
+                disabled={!title.trim() || aiLoading}
+                className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 hover:from-purple-500/20 hover:to-blue-500/20 border-purple-200"
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                {aiLoading ? "Generating..." : "Get AI Solution"}
+              </Button>
+            </div>
             <Textarea
               id="answer"
               value={answer}

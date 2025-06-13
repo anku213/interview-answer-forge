@@ -1,8 +1,9 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, LogOut, Code, User } from "lucide-react";
+import { Plus, Search, LogOut, Code, User, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
   onNewQuestion: () => void;
@@ -12,9 +13,14 @@ interface HeaderProps {
 
 export const Header = ({ onNewQuestion, searchTerm, onSearchChange }: HeaderProps) => {
   const { signOut, user } = useAuth();
+  const navigate = useNavigate();
 
   const handleSignOut = async () => {
     await signOut();
+  };
+
+  const handleSettingsClick = () => {
+    navigate('/settings');
   };
 
   return (
@@ -23,7 +29,7 @@ export const Header = ({ onNewQuestion, searchTerm, onSearchChange }: HeaderProp
         <div className="flex items-center justify-between">
           {/* Logo and Brand */}
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3 cursor-pointer" onClick={() => navigate('/')}>
               <div className="bg-primary/10 p-2 rounded-xl">
                 <Code className="h-7 w-7 text-primary" />
               </div>
@@ -69,6 +75,15 @@ export const Header = ({ onNewQuestion, searchTerm, onSearchChange }: HeaderProp
             >
               <Plus className="h-4 w-4 mr-2" />
               New Question
+            </Button>
+
+            <Button 
+              variant="outline" 
+              onClick={handleSettingsClick}
+              className="border-2 hover:bg-muted/50 transition-all duration-200 rounded-xl px-4"
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Settings
             </Button>
             
             <Button 
