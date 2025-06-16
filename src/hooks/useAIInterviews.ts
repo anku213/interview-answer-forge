@@ -214,7 +214,11 @@ export const useAIInterview = (interviewId: string) => {
         throw error;
       }
 
-      return data || [];
+      // Type cast to ensure role is properly typed
+      return (data || []).map(msg => ({
+        ...msg,
+        role: msg.role as 'user' | 'assistant'
+      }));
     },
     enabled: !!user && !!interviewId,
   });
@@ -239,7 +243,11 @@ export const useAIInterview = (interviewId: string) => {
         throw error;
       }
 
-      return data;
+      // Type cast to ensure role is properly typed
+      return {
+        ...data,
+        role: data.role as 'user' | 'assistant'
+      };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['interview-messages', interviewId] });

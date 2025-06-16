@@ -113,10 +113,60 @@ export const useGeminiAI = () => {
     }
   };
 
+  const generateResponse = async (prompt: string) => {
+    setLoading(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-ai-solution', {
+        body: { 
+          title: "AI Interview Response",
+          language: "general",
+          category: "interview",
+          existingCode: prompt,
+          existingAnswer: ""
+        }
+      });
+
+      if (error) {
+        console.error('Error calling Gemini AI for response:', error);
+        toast({
+          title: "Error",
+          description: error.message || "Failed to generate AI response",
+          variant: "destructive"
+        });
+        return null;
+      }
+
+      if (data?.error) {
+        console.error('Gemini AI response error:', data.error);
+        toast({
+          title: "Error",
+          description: data.error,
+          variant: "destructive"
+        });
+        return null;
+      }
+
+      return data.solution;
+    } catch (error) {
+      console.error('Error generating AI response:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate AI response",
+        variant: "destructive"
+      });
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     generateSolution,
     reviewCode,
+    generateResponse,
     loading,
-    reviewLoading
+    reviewLoading,
+    isLoading: loading
   };
 };
