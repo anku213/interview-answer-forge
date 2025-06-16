@@ -9,6 +9,74 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ai_interviews: {
+        Row: {
+          created_at: string
+          difficulty_level: string
+          experience_level: string
+          id: string
+          status: string
+          technology: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          difficulty_level: string
+          experience_level: string
+          id?: string
+          status?: string
+          technology: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          difficulty_level?: string
+          experience_level?: string
+          id?: string
+          status?: string
+          technology?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      interview_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          interview_id: string
+          role: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          interview_id: string
+          role: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          interview_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_messages_interview_id_fkey"
+            columns: ["interview_id"]
+            isOneToOne: false
+            referencedRelation: "ai_interviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       questions: {
         Row: {
           answer: string

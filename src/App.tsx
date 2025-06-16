@@ -9,6 +9,8 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Dashboard from "@/pages/Dashboard";
 import Questions from "@/pages/Questions";
+import AIInterview from "@/pages/AIInterview";
+import InterviewPanel from "@/pages/InterviewPanel";
 import Index from "@/pages/Index";
 import Auth from "@/pages/Auth";
 import Settings from "@/pages/Settings";
@@ -55,6 +57,8 @@ const AuthenticatedApp = () => {
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/questions" element={<Questions />} />
+        <Route path="/ai-interview" element={<AIInterview />} />
+        <Route path="/ai-interview/:interviewId" element={<InterviewPanel />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
