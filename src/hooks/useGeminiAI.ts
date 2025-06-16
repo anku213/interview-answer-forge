@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export const useGeminiAI = () => {
   const [loading, setLoading] = useState(false);
+  const [reviewLoading, setReviewLoading] = useState(false);
   const { toast } = useToast();
 
   const generateSolution = async (questionData: {
@@ -60,8 +61,62 @@ export const useGeminiAI = () => {
     }
   };
 
+  const reviewCode = async (codeData: {
+    code: string;
+    language: string;
+    title?: string;
+    category?: string;
+  }) => {
+    setReviewLoading(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('review-code', {
+        body: codeData
+      });
+
+      if (error) {
+        console.error('Error calling Gemini AI for code review:', error);
+        toast({
+          title: "Error",
+          description: error.message || "Failed to review code",
+          variant: "destructive"
+        });
+        return null;
+      }
+
+      if (data?.error) {
+        console.error('Gemini AI code review error:', data.error);
+        toast({
+          title: "Error",
+          description: data.error,
+          variant: "destructive"
+        });
+        return null;
+      }
+
+      toast({
+        title: "Success",
+        description: "Code review completed successfully"
+      });
+
+      return data.review;
+    } catch (error) {
+      console.error('Error reviewing code:', error);
+      toast({
+        title: "Error",
+        description: "Failed to review code",
+        variant: "destructive"
+      });
+      return null;
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
   return {
     generateSolution,
-    loading
+    reviewCode,
+    loading,
+    reviewLoading
   };
 };

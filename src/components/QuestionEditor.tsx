@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Save, X, Play, Sparkles } from "lucide-react";
+import { Save, X, Play, Sparkles, Eye } from "lucide-react";
 import { Question } from "@/types/Question";
 import { CodeEditor } from "./CodeEditor";
 import { CATEGORIES } from "@/utils/categories";
@@ -26,7 +26,8 @@ export const QuestionEditor = ({ question, onSave, onCancel }: QuestionEditorPro
   const [category, setCategory] = useState(question?.category || "javascript");
   const [output, setOutput] = useState("");
   const [isRunning, setIsRunning] = useState(false);
-  const { generateSolution, loading: aiLoading } = useGeminiAI();
+  const [codeReview, setCodeReview] = useState("");
+  const { generateSolution, reviewCode, loading: aiLoading, reviewLoading } = useGeminiAI();
 
   const handleSave = () => {
     if (!title.trim()) return;
@@ -111,6 +112,23 @@ export const QuestionEditor = ({ question, onSave, onCancel }: QuestionEditorPro
     if (solution) {
       // Parse the AI solution and update the answer field
       setAnswer(solution);
+    }
+  };
+
+  const handleCodeReview = async () => {
+    if (!code.trim()) {
+      return;
+    }
+
+    const review = await reviewCode({
+      code,
+      language,
+      title: title || undefined,
+      category: category || undefined
+    });
+
+    if (review) {
+      setCodeReview(review);
     }
   };
 
@@ -203,14 +221,25 @@ export const QuestionEditor = ({ question, onSave, onCancel }: QuestionEditorPro
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Code Solution</CardTitle>
-            <Button 
-              onClick={handleRunCode} 
-              disabled={!code.trim() || isRunning}
-              className="bg-green-600 hover:bg-green-700 text-white"
-            >
-              <Play className="h-4 w-4 mr-2" />
-              {isRunning ? "Running..." : "Run Code"}
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleCodeReview} 
+                disabled={!code.trim() || reviewLoading}
+                variant="outline"
+                className="bg-gradient-to-r from-orange-500/10 to-red-500/10 hover:from-orange-500/20 hover:to-red-500/20 border-orange-200"
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                {reviewLoading ? "Reviewing..." : "AI Code Review"}
+              </Button>
+              <Button 
+                onClick={handleRunCode} 
+                disabled={!code.trim() || isRunning}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                <Play className="h-4 w-4 mr-2" />
+                {isRunning ? "Running..." : "Run Code"}
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -232,6 +261,17 @@ export const QuestionEditor = ({ question, onSave, onCancel }: QuestionEditorPro
                 <pre className="text-sm text-black font-mono whitespace-pre-wrap">
                   {output}
                 </pre>
+              </div>
+            </div>
+          )}
+
+          {codeReview && (
+            <div>
+              <Label>AI Code Review</Label>
+              <div className="mt-1 p-4 bg-orange-50 rounded border border-orange-200 max-h-[400px] overflow-y-auto">
+                <div className="text-sm text-gray-800 whitespace-pre-wrap">
+                  {codeReview}
+                </div>
               </div>
             </div>
           )}
