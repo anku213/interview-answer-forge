@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -19,6 +18,7 @@ import {
 } from "lucide-react";
 import { useAIInterview, useAIInterviews } from "@/hooks/useAIInterviews";
 import { useGeminiAI } from "@/hooks/useGeminiAI";
+import { filterAIResponse, formatInterviewResponse, isWelcomeMessage } from "@/utils/aiResponseFilter";
 
 const InterviewPanel = () => {
   const { interviewId } = useParams<{ interviewId: string }>();
@@ -66,7 +66,18 @@ Start the interview with a warm welcome, briefly explain the interview process, 
 
     try {
       const aiResponse = await generateResponse(welcomePrompt);
-      await addMessage({ role: 'assistant', content: aiResponse });
+      
+      if (aiResponse) {
+        // Filter the AI response to extract only relevant content
+        const filteredResponse = filterAIResponse(aiResponse);
+        const formattedResponse = formatInterviewResponse(filteredResponse);
+        
+        console.log('Original AI response:', aiResponse);
+        console.log('Filtered response:', formattedResponse);
+        
+        await addMessage({ role: 'assistant', content: formattedResponse });
+      }
+      
       setIsInterviewStarted(true);
     } catch (error) {
       console.error('Error starting interview:', error);
@@ -104,7 +115,17 @@ Candidate: ${userMessage}
 As the interviewer, respond appropriately. Ask follow-up questions, provide feedback, or move to the next topic as needed. Keep responses concise and professional. If the candidate seems to be struggling, provide gentle guidance. If they're doing well, you can increase the difficulty slightly.`;
 
       const aiResponse = await generateResponse(aiPrompt);
-      await addMessage({ role: 'assistant', content: aiResponse });
+      
+      if (aiResponse) {
+        // Filter the AI response to extract only relevant content
+        const filteredResponse = filterAIResponse(aiResponse);
+        const formattedResponse = formatInterviewResponse(filteredResponse);
+        
+        console.log('Original AI response:', aiResponse);
+        console.log('Filtered response:', formattedResponse);
+        
+        await addMessage({ role: 'assistant', content: formattedResponse });
+      }
     } catch (error) {
       console.error('Error sending message:', error);
     }
