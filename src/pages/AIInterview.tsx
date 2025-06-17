@@ -1,34 +1,51 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { Plus, MessageSquare, Calendar, User, Settings, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Plus, Search, MessageSquare, Clock, User, Calendar } from "lucide-react";
-import { CreateInterviewModal } from "@/components/CreateInterviewModal";
-import { useAIInterviews } from "@/hooks/useAIInterviews";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { CreateInterviewModal } from "@/components/CreateInterviewModal";
+import { useAIInterviews } from "@/hooks/useAIInterviews";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const AIInterview = () => {
   const navigate = useNavigate();
-  const { interviews, loading, createInterview } = useAIInterviews();
-  const [searchTerm, setSearchTerm] = useState("");
+  const { user } = useAuth();
+  const { interviews, loading, createInterview, deleteInterview, isCreating, isDeleting } = useAIInterviews();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  const handleCreateInterview = async (interviewData: {
+  const handleCreateInterview = async (data: {
     title: string;
     technology: string;
     experience_level: string;
     difficulty_level: string;
   }) => {
     try {
-      const newInterview = await createInterview(interviewData);
+      const newInterview = await createInterview(data);
       setIsCreateModalOpen(false);
-      // Navigate to the interview panel
       navigate(`/ai-interview/${newInterview.id}`);
     } catch (error) {
-      console.error('Error creating interview:', error);
+      console.error('Failed to create interview:', error);
+    }
+  };
+
+  const handleDeleteInterview = async (interviewId: string) => {
+    try {
+      await deleteInterview(interviewId);
+    } catch (error) {
+      console.error('Failed to delete interview:', error);
     }
   };
 
@@ -36,149 +53,190 @@ const AIInterview = () => {
     navigate(`/ai-interview/${interviewId}`);
   };
 
-  const filteredInterviews = interviews.filter(interview =>
-    interview.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    interview.technology.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'draft': return 'bg-gray-100 text-gray-800';
-      case 'active': return 'bg-blue-100 text-blue-800';
-      case 'completed': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty.toLowerCase()) {
+      case 'easy':
+        return 'bg-green-100 text-green-800 hover:bg-green-200';
+      case 'intermediate':
+        return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200';
+      case 'hard':
+        return 'bg-red-100 text-red-800 hover:bg-red-200';
+      default:
+        return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
     }
   };
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'Easy': return 'bg-green-100 text-green-800';
-      case 'Intermediate': return 'bg-yellow-100 text-yellow-800';
-      case 'Hard': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'draft':
+        return 'bg-gray-100 text-gray-800';
+      case 'active':
+        return 'bg-blue-100 text-blue-800';
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
   };
 
   if (loading) {
     return (
-      <ProtectedRoute>
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary/30 border-t-primary mx-auto"></div>
-            <p className="mt-4 text-lg font-medium text-muted-foreground">Loading interviews...</p>
-          </div>
-        </div>
-      </ProtectedRoute>
-    );
-  }
-
-  return (
-    <ProtectedRoute>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">AI Interview</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-3xl font-bold">AI Interview Practice</h1>
+            <p className="text-muted-foreground mt-2">
               Practice technical interviews with AI-powered mock interviews
             </p>
           </div>
-          
-          <Button 
-            onClick={() => setIsCreateModalOpen(true)}
-            className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-primary-foreground"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            New Interview
-          </Button>
         </div>
-
-        {/* Search Bar */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search interviews..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-
-        {/* Interviews Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredInterviews.map((interview) => (
-            <Card key={interview.id} className="hover:shadow-lg transition-shadow cursor-pointer">
+        <div className="grid gap-4">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i} className="animate-pulse">
               <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg font-semibold line-clamp-2">
-                      {interview.title}
-                    </CardTitle>
-                    <CardDescription className="mt-1">
-                      {interview.technology}
-                    </CardDescription>
-                  </div>
-                  <MessageSquare className="h-5 w-5 text-muted-foreground flex-shrink-0 ml-2" />
-                </div>
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2 mt-2"></div>
               </CardHeader>
-              
-              <CardContent className="space-y-4">
-                <div className="flex flex-wrap gap-2">
-                  <Badge className={getStatusColor(interview.status)}>
-                    {interview.status}
-                  </Badge>
-                  <Badge className={getDifficultyColor(interview.difficulty_level)}>
-                    {interview.difficulty_level}
-                  </Badge>
-                </div>
-
-                <div className="space-y-2 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    <span>{interview.experience_level}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    <span>{new Date(interview.created_at).toLocaleDateString()}</span>
-                  </div>
-                </div>
-
-                <Button 
-                  onClick={() => handleStartInterview(interview.id)}
-                  className="w-full"
-                  variant={interview.status === 'completed' ? 'outline' : 'default'}
-                >
-                  {interview.status === 'completed' ? 'Review Interview' : 'Start Interview'}
-                </Button>
+              <CardContent>
+                <div className="h-3 bg-gray-200 rounded w-full"></div>
               </CardContent>
             </Card>
           ))}
         </div>
-
-        {filteredInterviews.length === 0 && (
-          <div className="text-center py-12">
-            <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-foreground mb-2">No interviews found</h3>
-            <p className="text-muted-foreground mb-4">
-              {searchTerm ? 'Try adjusting your search terms' : 'Create your first AI interview to get started'}
-            </p>
-            {!searchTerm && (
-              <Button onClick={() => setIsCreateModalOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Interview
-              </Button>
-            )}
-          </div>
-        )}
-
-        {/* Create Interview Modal */}
-        <CreateInterviewModal
-          open={isCreateModalOpen}
-          onOpenChange={setIsCreateModalOpen}
-          onSubmit={handleCreateInterview}
-        />
       </div>
-    </ProtectedRoute>
+    );
+  }
+
+  return (
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">AI Interview Practice</h1>
+          <p className="text-muted-foreground mt-2">
+            Practice technical interviews with AI-powered mock interviews
+          </p>
+        </div>
+        <Button 
+          onClick={() => setIsCreateModalOpen(true)}
+          className="flex items-center gap-2"
+          disabled={isCreating}
+        >
+          <Plus className="h-4 w-4" />
+          {isCreating ? 'Creating...' : 'New Interview'}
+        </Button>
+      </div>
+
+      {interviews.length === 0 ? (
+        <Card className="text-center py-12">
+          <CardContent>
+            <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-2">No interviews yet</h3>
+            <p className="text-muted-foreground mb-4">
+              Create your first AI interview to start practicing
+            </p>
+            <Button onClick={() => setIsCreateModalOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Interview
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4">
+          {interviews.map((interview) => (
+            <Card key={interview.id} className="hover:shadow-md transition-shadow">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <CardTitle className="text-xl mb-2">{interview.title}</CardTitle>
+                    <CardDescription className="flex items-center gap-4 text-sm">
+                      <span className="flex items-center gap-1">
+                        <Settings className="h-3 w-3" />
+                        {interview.technology}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <User className="h-3 w-3" />
+                        {interview.experience_level}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        {formatDate(interview.created_at)}
+                      </span>
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge className={getDifficultyColor(interview.difficulty_level)}>
+                      {interview.difficulty_level}
+                    </Badge>
+                    <Badge className={getStatusColor(interview.status)}>
+                      {interview.status}
+                    </Badge>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    Practice {interview.technology} interview questions at {interview.difficulty_level.toLowerCase()} level
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          disabled={isDeleting}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Interview</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete "{interview.title}"? This action cannot be undone and will also delete all associated chat history.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeleteInterview(interview.id)}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                    <Button 
+                      onClick={() => handleStartInterview(interview.id)}
+                      size="sm"
+                    >
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Start Interview
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <CreateInterviewModal
+        open={isCreateModalOpen}
+        onOpenChange={setIsCreateModalOpen}
+        onSubmit={handleCreateInterview}
+      />
+    </div>
   );
 };
 

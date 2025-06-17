@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -68,9 +67,31 @@ export const CreateInterviewModal = ({ open, onOpenChange, onSubmit }: CreateInt
   };
 
   const technologies = [
-    "JavaScript", "TypeScript", "React", "Node.js", "Python", "Java", 
-    "C++", "C#", "Go", "Rust", "PHP", "Ruby", "Swift", "Kotlin", 
-    "Angular", "Vue.js", "Django", "Flask", "Spring Boot", "Express.js"
+    // Frontend Technologies
+    "JavaScript", "TypeScript", "React", "Angular", "Vue.js", "Svelte", "Next.js", "Nuxt.js",
+    "HTML/CSS", "Sass/SCSS", "Tailwind CSS", "Bootstrap", "jQuery", "Webpack", "Vite",
+    
+    // Backend Technologies
+    "Node.js", "Express.js", "Nest.js", "Python", "Django", "Flask", "FastAPI", "Java", 
+    "Spring Boot", "C#", "ASP.NET", "Go", "Gin", "Rust", "PHP", "Laravel", "Symfony", 
+    "Ruby", "Ruby on Rails", "Kotlin", "Swift",
+    
+    // Databases
+    "MySQL", "PostgreSQL", "MongoDB", "Redis", "SQLite", "MariaDB", "Oracle Database", 
+    "SQL Server", "DynamoDB", "Cassandra", "Neo4j", "InfluxDB", "Elasticsearch",
+    
+    // Cloud & DevOps
+    "AWS", "Google Cloud", "Azure", "Docker", "Kubernetes", "Jenkins", "GitLab CI", 
+    "GitHub Actions", "Terraform", "Ansible",
+    
+    // Mobile Development
+    "React Native", "Flutter", "iOS Development", "Android Development", "Xamarin",
+    
+    // Data & Analytics
+    "Apache Spark", "Hadoop", "Kafka", "Airflow", "Pandas", "NumPy", "TensorFlow", "PyTorch",
+    
+    // Other Technologies
+    "GraphQL", "REST APIs", "gRPC", "Microservices", "Blockchain", "Web3", "Socket.io"
   ];
 
   const experienceLevels = [
@@ -116,7 +137,7 @@ export const CreateInterviewModal = ({ open, onOpenChange, onSubmit }: CreateInt
               <SelectTrigger>
                 <SelectValue placeholder="Select technology" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-[200px]">
                 {technologies.map((tech) => (
                   <SelectItem key={tech} value={tech}>
                     {tech}
