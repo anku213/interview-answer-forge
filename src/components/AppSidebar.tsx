@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { LayoutDashboard, HelpCircle, Code, User, MessageSquare } from "lucide-react";
+import { LayoutDashboard, HelpCircle, Code, User, MessageSquare, Settings } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -32,6 +32,11 @@ const menuItems = [
     url: "/ai-interview",
     icon: MessageSquare,
   },
+  {
+    title: "Settings",
+    url: "/settings",
+    icon: Settings,
+  },
 ];
 
 export function AppSidebar() {
@@ -50,8 +55,8 @@ export function AppSidebar() {
           <div className="bg-primary/10 p-2 rounded-xl">
             <Code className="h-6 w-6 text-primary" />
           </div>
-          <div>
-            <h2 className="text-lg font-semibold text-foreground">Interview Prep</h2>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg font-semibold text-foreground truncate">Interview Prep</h2>
             <p className="text-xs text-muted-foreground">Navigation</p>
           </div>
         </div>
@@ -71,10 +76,10 @@ export function AppSidebar() {
                   >
                     <button
                       onClick={() => handleNavigation(item.url)}
-                      className="flex items-center w-full"
+                      className="flex items-center w-full space-x-2"
                     >
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
+                      <item.icon className="h-4 w-4 flex-shrink-0" />
+                      <span className="truncate">{item.title}</span>
                     </button>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -87,7 +92,7 @@ export function AppSidebar() {
       <SidebarFooter className="p-4">
         {user && (
           <div className="flex items-center space-x-3 p-2 bg-muted/30 rounded-lg">
-            <div className="bg-primary/10 p-1.5 rounded-lg">
+            <div className="bg-primary/10 p-1.5 rounded-lg flex-shrink-0">
               <User className="h-4 w-4 text-primary" />
             </div>
             <div className="flex-1 min-w-0">

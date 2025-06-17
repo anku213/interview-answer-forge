@@ -83,19 +83,19 @@ const Questions = () => {
 
   return (
     <ProtectedRoute>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Question Module Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Question Management</h1>
-            <p className="text-muted-foreground">
+        <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground truncate">Question Management</h1>
+            <p className="text-muted-foreground text-sm sm:text-base">
               Manage your collection of {convertedQuestions.length} interview questions
             </p>
           </div>
           
           <Button 
             onClick={handleNewQuestion}
-            className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-primary-foreground"
+            className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-primary-foreground w-full sm:w-auto"
           >
             <Plus className="h-4 w-4 mr-2" />
             New Question
@@ -103,19 +103,19 @@ const Questions = () => {
         </div>
 
         {/* Search Bar */}
-        <div className="relative max-w-md">
+        <div className="relative max-w-full sm:max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search questions..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 w-full"
           />
         </div>
 
         {/* Content Area */}
         {isEditing ? (
-          <div className="bg-background/60 backdrop-blur-sm border border-border/50 rounded-2xl shadow-xl p-8">
+          <div className="bg-background/60 backdrop-blur-sm border border-border/50 rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8">
             <QuestionEditor
               question={editingQuestion}
               onSave={handleSaveQuestion}
@@ -123,7 +123,7 @@ const Questions = () => {
             />
           </div>
         ) : (
-          <div className="bg-background/40 backdrop-blur-sm border border-border/30 rounded-2xl shadow-lg p-6">
+          <div className="bg-background/40 backdrop-blur-sm border border-border/30 rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6">
             <QuestionList
               questions={convertedQuestions}
               onEdit={handleEditQuestion}

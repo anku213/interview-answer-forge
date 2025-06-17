@@ -32,16 +32,18 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
-        <SidebarInset className="flex-1">
+        <SidebarInset className="flex-1 min-w-0">
           <div className="flex flex-col min-h-screen">
             <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40">
-              <div className="container mx-auto px-6 py-3 flex items-center">
+              <div className="flex items-center px-4 sm:px-6 py-3">
                 <SidebarTrigger className="mr-4" />
-                <h1 className="text-lg font-semibold">Interview Prep Platform</h1>
+                <h1 className="text-lg font-semibold truncate">Interview Prep Platform</h1>
               </div>
             </header>
-            <main className="flex-1 container mx-auto px-6 py-8">
-              {children}
+            <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+              <div className="max-w-full mx-auto">
+                {children}
+              </div>
             </main>
           </div>
         </SidebarInset>
@@ -53,16 +55,14 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
 // Component to handle authenticated routes
 const AuthenticatedApp = () => {
   return (
-    <AppLayout>
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/questions" element={<Questions />} />
-        <Route path="/ai-interview" element={<AIInterview />} />
-        <Route path="/ai-interview/:interviewId" element={<InterviewPanel />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </AppLayout>
+    <Routes>
+      <Route path="/" element={<AppLayout><Dashboard /></AppLayout>} />
+      <Route path="/questions" element={<AppLayout><Questions /></AppLayout>} />
+      <Route path="/ai-interview" element={<AppLayout><AIInterview /></AppLayout>} />
+      <Route path="/ai-interview/:interviewId" element={<AppLayout><InterviewPanel /></AppLayout>} />
+      <Route path="/settings" element={<AppLayout><Settings /></AppLayout>} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 };
 
@@ -72,7 +72,7 @@ const AppRoutes = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
           <p className="mt-2 text-muted-foreground">Loading...</p>
