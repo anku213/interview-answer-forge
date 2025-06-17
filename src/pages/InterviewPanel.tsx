@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -18,7 +19,9 @@ import {
 } from "lucide-react";
 import { useAIInterview, useAIInterviews } from "@/hooks/useAIInterviews";
 import { useGeminiAI } from "@/hooks/useGeminiAI";
-import { filterAIResponse, formatInterviewResponse, isWelcomeMessage } from "@/utils/aiResponseFilter";
+import { useInterviewContext } from "@/hooks/useInterviewContext";
+import { buildInterviewPrompt, extractQuestionFromResponse } from "@/utils/interviewPromptBuilder";
+import { filterAIResponse, formatInterviewResponse } from "@/utils/aiResponseFilter";
 
 const InterviewPanel = () => {
   const { interviewId } = useParams<{ interviewId: string }>();
@@ -29,6 +32,15 @@ const InterviewPanel = () => {
   const [message, setMessage] = useState("");
   const [isInterviewStarted, setIsInterviewStarted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  const {
+    context,
+    addAskedQuestion,
+    updatePhase,
+    updateUserProfile,
+    addToHistory,
+    isQuestionAlreadyAsked,
+  } = useInterviewContext();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -41,39 +53,61 @@ const InterviewPanel = () => {
   useEffect(() => {
     if (messages.length > 0) {
       setIsInterviewStarted(true);
+      // Sync messages with interview context
+      messages.forEach(msg => {
+        addToHistory(msg.role, msg.content);
+      });
     }
-  }, [messages]);
+  }, [messages, addToHistory]);
+
+  const analyzeUserResponse = (userResponse: string) => {
+    // Extract potential user information from their response
+    const lowerResponse = userResponse.toLowerCase();
+    
+    // Extract name if mentioned
+    const nameMatch = userResponse.match(/(?:i'm|i am|my name is|call me)\s+([a-zA-Z]+)/i);
+    if (nameMatch) {
+      updateUserProfile({ name: nameMatch[1] });
+    }
+
+    // Extract experience mentions
+    const experienceMatch = userResponse.match(/(\d+)\s+years?\s+(?:of\s+)?experience/i);
+    if (experienceMatch) {
+      updateUserProfile({ experience: `${experienceMatch[1]} years` });
+    }
+
+    // Update interview phase based on conversation flow
+    if (context.interviewPhase === 'introduction' && context.conversationHistory.length >= 2) {
+      updatePhase('technical');
+    } else if (context.interviewPhase === 'technical' && context.conversationHistory.length >= 8) {
+      updatePhase('experience');
+    } else if (context.interviewPhase === 'experience' && context.conversationHistory.length >= 12) {
+      updatePhase('conclusion');
+    }
+  };
 
   const handleStartInterview = async () => {
     if (!interview) return;
 
-    // Update interview status to active
     await updateInterview({ 
       id: interview.id, 
       updates: { status: 'active' } 
     });
 
-    // Generate AI welcome message
-    const welcomePrompt = `You are an AI technical interviewer conducting a ${interview.difficulty_level} level interview for a ${interview.experience_level} position focusing on ${interview.technology}. 
-
-Interview Details:
-- Title: ${interview.title}
-- Technology: ${interview.technology}
-- Experience Level: ${interview.experience_level}
-- Difficulty: ${interview.difficulty_level}
-
-Start the interview with a warm welcome, briefly explain the interview process, and ask the first technical question appropriate for this level and technology. Keep your response professional but friendly.`;
-
     try {
+      const welcomePrompt = buildInterviewPrompt(interview, context);
       const aiResponse = await generateResponse(welcomePrompt);
       
       if (aiResponse) {
-        // Filter the AI response to extract only relevant content
         const filteredResponse = filterAIResponse(aiResponse);
         const formattedResponse = formatInterviewResponse(filteredResponse);
         
-        console.log('Original AI response:', aiResponse);
-        console.log('Filtered response:', formattedResponse);
+        console.log('Starting interview with response:', formattedResponse);
+        
+        // Extract and track the question
+        const question = extractQuestionFromResponse(formattedResponse);
+        addAskedQuestion(question);
+        addToHistory('assistant', formattedResponse);
         
         await addMessage({ role: 'assistant', content: formattedResponse });
       }
@@ -91,39 +125,30 @@ Start the interview with a warm welcome, briefly explain the interview process, 
     setMessage("");
 
     try {
-      // Add user message
+      // Add user message and analyze it
       await addMessage({ role: 'user', content: userMessage });
+      addToHistory('user', userMessage);
+      analyzeUserResponse(userMessage);
 
-      // Generate AI response
-      const conversationHistory = messages.map(msg => 
-        `${msg.role === 'user' ? 'Candidate' : 'Interviewer'}: ${msg.content}`
-      ).join('\n\n');
-
-      const aiPrompt = `You are conducting a technical interview for a ${interview.experience_level} ${interview.technology} position. 
-
-Interview Context:
-- Title: ${interview.title}
-- Technology: ${interview.technology}
-- Experience Level: ${interview.experience_level}
-- Difficulty: ${interview.difficulty_level}
-
-Previous conversation:
-${conversationHistory}
-
-Candidate: ${userMessage}
-
-As the interviewer, respond appropriately. Ask follow-up questions, provide feedback, or move to the next topic as needed. Keep responses concise and professional. If the candidate seems to be struggling, provide gentle guidance. If they're doing well, you can increase the difficulty slightly.`;
-
+      // Generate context-aware AI response
+      const aiPrompt = buildInterviewPrompt(interview, context, userMessage);
+      console.log('Generated prompt for AI:', aiPrompt);
+      
       const aiResponse = await generateResponse(aiPrompt);
       
       if (aiResponse) {
-        // Filter the AI response to extract only relevant content
         const filteredResponse = filterAIResponse(aiResponse);
         const formattedResponse = formatInterviewResponse(filteredResponse);
         
-        console.log('Original AI response:', aiResponse);
-        console.log('Filtered response:', formattedResponse);
+        console.log('AI response:', formattedResponse);
         
+        // Extract and track the new question
+        const question = extractQuestionFromResponse(formattedResponse);
+        if (question && !isQuestionAlreadyAsked(question)) {
+          addAskedQuestion(question);
+        }
+        
+        addToHistory('assistant', formattedResponse);
         await addMessage({ role: 'assistant', content: formattedResponse });
       }
     } catch (error) {
@@ -219,6 +244,11 @@ As the interviewer, respond appropriately. Ask follow-up questions, provide feed
                   <Badge className={getStatusColor(interview.status)}>
                     {interview.status}
                   </Badge>
+                  {context.interviewPhase && (
+                    <Badge variant="secondary">
+                      Phase: {context.interviewPhase}
+                    </Badge>
+                  )}
                 </div>
               </div>
             </div>
@@ -254,8 +284,8 @@ As the interviewer, respond appropriately. Ask follow-up questions, provide feed
                   </div>
                   
                   <p className="text-sm text-muted-foreground">
-                    Click the button below to begin your AI-powered technical interview. 
-                    The AI interviewer will ask you questions relevant to your experience level and chosen technology.
+                    This AI interview will follow a structured flow with personalized questions based on your responses. 
+                    The AI will track context and avoid repeating questions for a natural interview experience.
                   </p>
                   
                   <Button onClick={handleStartInterview} className="w-full">
