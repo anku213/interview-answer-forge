@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { LayoutDashboard, HelpCircle, Code, User, MessageSquare, Settings } from "lucide-react";
+import { LayoutDashboard, HelpCircle, Code, User, MessageSquare, Settings, Building2 } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -26,6 +26,11 @@ const menuItems = [
     title: "Question Module",
     url: "/questions",
     icon: HelpCircle,
+  },
+  {
+    title: "Company Questions",
+    url: "/company-questions",
+    icon: Building2,
   },
   {
     title: "AI Interview",

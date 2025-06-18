@@ -45,6 +45,80 @@ export type Database = {
         }
         Relationships: []
       }
+      companies: {
+        Row: {
+          created_at: string
+          id: string
+          logo_url: string | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      company_questions: {
+        Row: {
+          ai_explanation: string | null
+          ai_hint: string | null
+          company_id: string
+          content: string
+          created_at: string
+          difficulty: string
+          id: string
+          question_type: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          ai_explanation?: string | null
+          ai_hint?: string | null
+          company_id: string
+          content: string
+          created_at?: string
+          difficulty: string
+          id?: string
+          question_type: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          ai_explanation?: string | null
+          ai_hint?: string | null
+          company_id?: string
+          content?: string
+          created_at?: string
+          difficulty?: string
+          id?: string
+          question_type?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_questions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       interview_messages: {
         Row: {
           content: string
@@ -136,6 +210,50 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_progress: {
+        Row: {
+          bookmarked: boolean | null
+          created_at: string
+          id: string
+          notes: string | null
+          question_id: string
+          solved: boolean | null
+          updated_at: string
+          user_answer: string | null
+          user_id: string
+        }
+        Insert: {
+          bookmarked?: boolean | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          question_id: string
+          solved?: boolean | null
+          updated_at?: string
+          user_answer?: string | null
+          user_id: string
+        }
+        Update: {
+          bookmarked?: boolean | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          question_id?: string
+          solved?: boolean | null
+          updated_at?: string
+          user_answer?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_progress_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "company_questions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
