@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
@@ -58,11 +57,13 @@ export const useCompanyQuestions = (companyId?: string) => {
           variant: "destructive"
         });
       } else {
-        setQuestions(data || []);
+        // Type assertion to ensure the data matches our interface
+        const typedData = (data || []) as CompanyQuestion[];
+        setQuestions(typedData);
         
         // Fetch user progress for these questions if user is logged in
-        if (user && data) {
-          await fetchUserProgress(data.map(q => q.id));
+        if (user && typedData) {
+          await fetchUserProgress(typedData.map(q => q.id));
         }
       }
     } catch (error) {
