@@ -1,14 +1,16 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { ArrowLeft, Bookmark, BookmarkCheck, CheckCircle, Circle, Lightbulb, Brain, MessageSquare, Code, FileText } from "lucide-react";
+import { ArrowLeft, Bookmark, BookmarkCheck, CheckCircle, Circle, Lightbulb, Brain, MessageSquare, Code, FileText, Send, CheckIcon, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCompanyQuestions } from "@/hooks/useCompanyQuestions";
 import { useAuth } from "@/hooks/useAuth";
+import { useGeminiAI } from "@/hooks/useGeminiAI";
 
 export default function QuestionDetail() {
   const { companyId, questionId } = useParams<{ companyId: string; questionId: string }>();
@@ -18,8 +20,16 @@ export default function QuestionDetail() {
   const { user } = useAuth();
   
   const { questions, userProgress, updateUserProgress, loading } = useCompanyQuestions(companyId);
+  const { generateResponse, loading: aiLoading } = useGeminiAI();
+  
   const [userAnswer, setUserAnswer] = useState("");
   const [userNotes, setUserNotes] = useState("");
+  const [validationResult, setValidationResult] = useState<{
+    isCorrect: boolean;
+    feedback: string;
+    suggestedSolution?: string;
+  } | null>(null);
+  const [showValidation, setShowValidation] = useState(false);
 
   const question = questions.find(q => q.id === questionId);
   const progress = questionId ? userProgress[questionId] : undefined;
@@ -69,6 +79,64 @@ export default function QuestionDetail() {
       user_answer: userAnswer,
       notes: userNotes
     });
+  };
+
+  const handleSubmitForValidation = async () => {
+    if (!question || !userAnswer.trim()) return;
+
+    setShowValidation(false);
+    
+    const validationPrompt = `
+Please analyze the following interview question and the user's submitted answer. Provide feedback on whether the answer is correct or not.
+
+**Question:** ${question.title}
+**Question Type:** ${question.question_type}
+**Difficulty:** ${question.difficulty}
+**Question Content:** ${question.content}
+
+**User's Answer:** ${userAnswer}
+
+Please respond in the following JSON format:
+{
+  "isCorrect": true/false,
+  "feedback": "Brief feedback explaining why the answer is correct or incorrect",
+  "suggestedSolution": "If incorrect, provide a better solution or approach (optional if correct)"
+}
+
+Be thorough but concise in your evaluation. Consider accuracy, completeness, and best practices.
+    `;
+
+    try {
+      const aiResponse = await generateResponse(validationPrompt);
+      
+      if (aiResponse) {
+        // Try to parse JSON response, fallback to text parsing if needed
+        try {
+          const parsedResponse = JSON.parse(aiResponse);
+          setValidationResult(parsedResponse);
+        } catch {
+          // Fallback to simple text parsing
+          const isCorrect = aiResponse.toLowerCase().includes("correct") && 
+                           !aiResponse.toLowerCase().includes("not correct") &&
+                           !aiResponse.toLowerCase().includes("incorrect");
+          
+          setValidationResult({
+            isCorrect,
+            feedback: aiResponse,
+            suggestedSolution: !isCorrect ? "Please review the AI feedback above for guidance." : undefined
+          });
+        }
+        setShowValidation(true);
+      }
+    } catch (error) {
+      console.error('Error validating answer:', error);
+      setValidationResult({
+        isCorrect: false,
+        feedback: "Sorry, there was an error validating your answer. Please try again.",
+        suggestedSolution: "Please check your connection and try again."
+      });
+      setShowValidation(true);
+    }
   };
 
   if (loading) {
@@ -208,6 +276,28 @@ export default function QuestionDetail() {
                       rows={10}
                       className="font-mono text-sm"
                     />
+                    <div className="flex space-x-2">
+                      <Button onClick={handleSaveAnswer} variant="outline" className="flex-1">
+                        Save Progress
+                      </Button>
+                      <Button 
+                        onClick={handleSubmitForValidation}
+                        disabled={!userAnswer.trim() || aiLoading}
+                        className="flex-1"
+                      >
+                        {aiLoading ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                            Validating...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="h-4 w-4 mr-2" />
+                            Submit My Answer
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </TabsContent>
                   <TabsContent value="notes" className="space-y-4">
                     <Textarea
@@ -216,11 +306,40 @@ export default function QuestionDetail() {
                       onChange={(e) => setUserNotes(e.target.value)}
                       rows={6}
                     />
+                    <Button onClick={handleSaveAnswer} className="w-full">
+                      Save Notes
+                    </Button>
                   </TabsContent>
                 </Tabs>
-                <Button onClick={handleSaveAnswer} className="w-full">
-                  Save Progress
-                </Button>
+
+                {/* Validation Result */}
+                {showValidation && validationResult && (
+                  <Alert className={validationResult.isCorrect ? "border-green-500 bg-green-50" : "border-red-500 bg-red-50"}>
+                    <div className="flex items-start space-x-2">
+                      {validationResult.isCorrect ? (
+                        <CheckIcon className="h-5 w-5 text-green-600 mt-0.5" />
+                      ) : (
+                        <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
+                      )}
+                      <div className="space-y-2 flex-1">
+                        <AlertDescription className={validationResult.isCorrect ? "text-green-800" : "text-red-800"}>
+                          <strong>
+                            {validationResult.isCorrect ? "✅ Great job! Your answer is correct." : "❌ Your answer needs improvement."}
+                          </strong>
+                        </AlertDescription>
+                        <AlertDescription className={validationResult.isCorrect ? "text-green-700" : "text-red-700"}>
+                          {validationResult.feedback}
+                        </AlertDescription>
+                        {!validationResult.isCorrect && validationResult.suggestedSolution && (
+                          <div className="mt-3 p-3 bg-white rounded border">
+                            <p className="font-medium text-gray-900 mb-2">Suggested Solution:</p>
+                            <p className="text-gray-700 whitespace-pre-wrap">{validationResult.suggestedSolution}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </Alert>
+                )}
               </CardContent>
             </Card>
           )}
