@@ -6,16 +6,44 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { Header } from "@/components/Header";
 import { useUserApiKeys } from "@/hooks/useUserApiKeys";
-import { Key, Eye, EyeOff, Trash2, Save, ExternalLink } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { 
+  Key, 
+  Eye, 
+  EyeOff, 
+  Trash2, 
+  Save, 
+  ExternalLink, 
+  User, 
+  Shield, 
+  Bell, 
+  Palette, 
+  Globe, 
+  AlertTriangle,
+  Settings as SettingsIcon,
+  Bot,
+  Mail
+} from "lucide-react";
 
 const Settings = () => {
   const { apiKeys, loading, saveGeminiApiKey, deleteGeminiApiKey } = useUserApiKeys();
+  const { user } = useAuth();
   const [geminiApiKey, setGeminiApiKey] = useState("");
   const [showApiKey, setShowApiKey] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  // Mock state for preferences (in real app, these would be stored in database)
+  const [preferences, setPreferences] = useState({
+    theme: "system",
+    language: "en",
+    experienceLevel: "intermediate",
+    aiSuggestionsEnabled: true,
+    emailNotifications: true,
+    interviewReminders: true,
+    newContentAlerts: false,
+  });
 
   const handleSaveGeminiApiKey = async () => {
     if (!geminiApiKey.trim()) return;
@@ -34,6 +62,11 @@ const Settings = () => {
     setDeleting(false);
   };
 
+  const handlePreferenceChange = (key: string, value: any) => {
+    setPreferences(prev => ({ ...prev, [key]: value }));
+    // In a real app, you would save this to the database
+  };
+
   if (loading) {
     return (
       <ProtectedRoute>
@@ -50,33 +83,120 @@ const Settings = () => {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/10">
-        <Header
-          onNewQuestion={() => {}}
-          searchTerm=""
-          onSearchChange={() => {}}
-        />
-        
         <main className="container mx-auto px-6 py-8">
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto space-y-8">
+            {/* Header */}
             <div className="mb-8">
-              <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
+              <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center">
+                <SettingsIcon className="h-8 w-8 mr-3 text-primary" />
+                Settings
+              </h1>
               <p className="text-muted-foreground text-lg">
-                Manage your API keys and preferences
+                Manage your account, preferences, and application settings
               </p>
             </div>
 
-            {/* API Keys Section */}
-            <Card className="mb-8">
+            {/* Account Information */}
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Key className="h-5 w-5" />
-                  API Keys
+                  <User className="h-5 w-5" />
+                  Account Information
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  Manage your API keys for AI-powered features
+                  Your personal account details and profile information
                 </p>
               </CardHeader>
               <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label className="text-base font-medium">Full Name</Label>
+                    <Input 
+                      placeholder="Enter your full name" 
+                      className="mt-2"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      This will be displayed in your profile
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <Label className="text-base font-medium">Email Address</Label>
+                    <Input 
+                      value={user?.email || ""}
+                      disabled
+                      className="mt-2 bg-muted/50"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Email cannot be changed after registration
+                    </p>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <Label className="text-base font-medium">Profile Picture</Label>
+                  <div className="mt-2 flex items-center space-x-4">
+                    <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                      <User className="h-8 w-8 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <Button variant="outline" size="sm">Upload New Picture</Button>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Recommended: Square image, at least 200x200px
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <Label className="text-base font-medium">Change Password</Label>
+                  <div className="mt-2 space-y-3">
+                    <Input type="password" placeholder="Current password" />
+                    <Input type="password" placeholder="New password" />
+                    <Input type="password" placeholder="Confirm new password" />
+                    <Button className="w-full md:w-auto">
+                      Update Password
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* AI API Configuration */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bot className="h-5 w-5" />
+                  AI Configuration
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Configure AI services and manage your API keys for enhanced features
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* AI Suggestions Toggle */}
+                <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+                  <div>
+                    <Label className="text-base font-medium">AI Suggestions</Label>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Enable AI-powered hints and explanations for questions
+                    </p>
+                  </div>
+                  <Button
+                    variant={preferences.aiSuggestionsEnabled ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handlePreferenceChange('aiSuggestionsEnabled', !preferences.aiSuggestionsEnabled)}
+                  >
+                    {preferences.aiSuggestionsEnabled ? "Enabled" : "Disabled"}
+                  </Button>
+                </div>
+
+                <Separator />
+
                 {/* Gemini API Key */}
                 <div>
                   <div className="flex items-center justify-between mb-4">
@@ -134,7 +254,7 @@ const Settings = () => {
                         </Button>
                       </div>
                       <p className="text-xs text-green-600">
-                        ✓ Gemini API key is configured
+                        ✓ Gemini API key is configured and ready to use
                       </p>
                     </div>
                   ) : (
@@ -162,16 +282,232 @@ const Settings = () => {
                   )}
                 </div>
 
-                <Separator />
-
                 <div className="bg-muted/30 p-4 rounded-lg">
-                  <h4 className="font-medium mb-2">About API Keys</h4>
+                  <h4 className="font-medium mb-2 flex items-center">
+                    <Shield className="h-4 w-4 mr-2" />
+                    Security & Privacy
+                  </h4>
                   <ul className="text-sm text-muted-foreground space-y-1">
                     <li>• API keys are stored securely and encrypted</li>
                     <li>• Only you can access your API keys</li>
                     <li>• API keys are used only for generating AI solutions</li>
                     <li>• You can delete your API keys at any time</li>
                   </ul>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Preferences */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Palette className="h-5 w-5" />
+                  Preferences
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Customize your application experience and interface
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label className="text-base font-medium">Theme</Label>
+                    <div className="mt-2 space-y-2">
+                      {["light", "dark", "system"].map((theme) => (
+                        <button
+                          key={theme}
+                          onClick={() => handlePreferenceChange('theme', theme)}
+                          className={`w-full p-3 text-left rounded-lg border transition-colors ${
+                            preferences.theme === theme
+                              ? "border-primary bg-primary/10 text-primary"
+                              : "border-border hover:bg-muted/50"
+                          }`}
+                        >
+                          <div className="font-medium capitalize">{theme}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {theme === "system" ? "Follow system preference" : `${theme} mode`}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label className="text-base font-medium">Experience Level</Label>
+                    <div className="mt-2 space-y-2">
+                      {["beginner", "intermediate", "advanced"].map((level) => (
+                        <button
+                          key={level}
+                          onClick={() => handlePreferenceChange('experienceLevel', level)}
+                          className={`w-full p-3 text-left rounded-lg border transition-colors ${
+                            preferences.experienceLevel === level
+                              ? "border-primary bg-primary/10 text-primary"
+                              : "border-border hover:bg-muted/50"
+                          }`}
+                        >
+                          <div className="font-medium capitalize">{level}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {level === "beginner" && "New to coding interviews"}
+                            {level === "intermediate" && "Some interview experience"}
+                            {level === "advanced" && "Experienced developer"}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <Label className="text-base font-medium">Language & Region</Label>
+                  <div className="mt-2 flex items-center space-x-4">
+                    <Globe className="h-5 w-5 text-muted-foreground" />
+                    <select
+                      value={preferences.language}
+                      onChange={(e) => handlePreferenceChange('language', e.target.value)}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                      <option value="en">English</option>
+                      <option value="es">Spanish</option>
+                      <option value="fr">French</option>
+                      <option value="de">German</option>
+                    </select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Notification Preferences */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="h-5 w-5" />
+                  Notifications
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Control how and when you receive notifications
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <Mail className="h-5 w-5 text-primary" />
+                      <div>
+                        <Label className="text-base font-medium">Email Notifications</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Receive important updates via email
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant={preferences.emailNotifications ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handlePreferenceChange('emailNotifications', !preferences.emailNotifications)}
+                    >
+                      {preferences.emailNotifications ? "On" : "Off"}
+                    </Button>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <Bell className="h-5 w-5 text-blue-500" />
+                      <div>
+                        <Label className="text-base font-medium">AI Interview Reminders</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Get reminded about scheduled interviews
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant={preferences.interviewReminders ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handlePreferenceChange('interviewReminders', !preferences.interviewReminders)}
+                    >
+                      {preferences.interviewReminders ? "On" : "Off"}
+                    </Button>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <Palette className="h-5 w-5 text-green-500" />
+                      <div>
+                        <Label className="text-base font-medium">New Content Alerts</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Be notified about new questions and features
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant={preferences.newContentAlerts ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handlePreferenceChange('newContentAlerts', !preferences.newContentAlerts)}
+                    >
+                      {preferences.newContentAlerts ? "On" : "Off"}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Danger Zone */}
+            <Card className="border-destructive/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-destructive">
+                  <AlertTriangle className="h-5 w-5" />
+                  Danger Zone
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Irreversible and destructive actions for your account
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h4 className="font-medium text-destructive mb-2">Reset Progress</h4>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        This will permanently delete all your question progress, bookmarks, and AI interview history. 
+                        Your account and settings will remain intact.
+                      </p>
+                      <Button 
+                        variant="outline" 
+                        className="border-destructive/50 text-destructive hover:bg-destructive/10"
+                        onClick={() => {
+                          if (confirm("Are you sure you want to reset all your progress? This action cannot be undone.")) {
+                            // Handle progress reset
+                            console.log("Progress reset requested");
+                          }
+                        }}
+                      >
+                        Reset Progress
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h4 className="font-medium text-destructive mb-2">Delete Account</h4>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Permanently delete your account and all associated data. This action cannot be undone 
+                        and you will lose access to all your questions, progress, and settings.
+                      </p>
+                      <Button 
+                        variant="destructive"
+                        onClick={() => {
+                          if (confirm("Are you absolutely sure you want to delete your account? This action cannot be undone and you will lose all your data.")) {
+                            // Handle account deletion
+                            console.log("Account deletion requested");
+                          }
+                        }}
+                      >
+                        Delete Account
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>

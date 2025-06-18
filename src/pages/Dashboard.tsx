@@ -3,7 +3,9 @@ import { useState } from "react";
 import { useSupabaseQuestions } from "@/hooks/useSupabaseQuestions";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Button } from "@/components/ui/button";
-import { Plus, BookOpen, Code, TrendingUp } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Plus, BookOpen, Code, TrendingUp, Target, Flame, Lightbulb, MessageSquare, Bookmark, Play, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
@@ -26,11 +28,32 @@ const Dashboard = () => {
     navigate('/questions');
   };
 
+  const handleNavigateToAIInterview = () => {
+    navigate('/ai-interview');
+  };
+
+  // Mock data for demo purposes - in real app, this would come from actual user data
   const stats = {
     totalQuestions: convertedQuestions.length,
+    questionsSolved: Math.floor(convertedQuestions.length * 0.7), // 70% solved
+    interviewsCompleted: 3,
+    bookmarkedItems: Math.floor(convertedQuestions.length * 0.3),
     categories: new Set(convertedQuestions.map(q => q.category)).size,
     languages: new Set(convertedQuestions.map(q => q.language)).size,
+    dailyGoalProgress: 60, // 60% of daily goal completed
+    interviewPrepCompletion: 45, // 45% overall completion
+    aiInterviewParticipation: 75, // 75% AI interview participation
+    currentStreak: 5,
   };
+
+  const recentActivities = [
+    { id: 1, action: "Solved a JavaScript question", time: "2 hours ago", icon: Code },
+    { id: 2, action: "Completed AI Interview on React", time: "1 day ago", icon: MessageSquare },
+    { id: 3, action: "Bookmarked Array Algorithms", time: "2 days ago", icon: Bookmark },
+    { id: 4, action: "Started Python practice session", time: "3 days ago", icon: Play },
+  ];
+
+  const motivationalTip = "Consistency beats intensity. Practice a little every day to build your coding skills!";
 
   if (loading) {
     return (
@@ -54,119 +77,237 @@ const Dashboard = () => {
             Welcome to Interview Prep
           </h1>
           <p className="text-muted-foreground text-base sm:text-lg px-4">
-            Master your coding interviews with organized questions and practice
+            Your personalized dashboard for mastering coding interviews
           </p>
         </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-xl p-4 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div className="min-w-0 flex-1">
-                <p className="text-primary font-semibold text-xs sm:text-sm uppercase tracking-wide">Total Questions</p>
-                <p className="text-2xl sm:text-3xl font-bold text-primary">{stats.totalQuestions}</p>
-              </div>
-              <div className="bg-primary/10 p-2 sm:p-3 rounded-lg flex-shrink-0">
-                <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-gradient-to-br from-green-500/10 to-green-500/5 border border-green-500/20 rounded-xl p-4 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div className="min-w-0 flex-1">
-                <p className="text-green-600 font-semibold text-xs sm:text-sm uppercase tracking-wide">Categories</p>
-                <p className="text-2xl sm:text-3xl font-bold text-green-600">{stats.categories}</p>
-              </div>
-              <div className="bg-green-500/10 p-2 sm:p-3 rounded-lg flex-shrink-0">
-                <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 border border-purple-500/20 rounded-xl p-4 sm:p-6 sm:col-span-2 lg:col-span-1">
-            <div className="flex items-center justify-between">
-              <div className="min-w-0 flex-1">
-                <p className="text-purple-600 font-semibold text-xs sm:text-sm uppercase tracking-wide">Languages</p>
-                <p className="text-2xl sm:text-3xl font-bold text-purple-600">{stats.languages}</p>
-              </div>
-              <div className="bg-purple-500/10 p-2 sm:p-3 rounded-lg flex-shrink-0">
-                <Code className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
-              </div>
-            </div>
-          </div>
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-300">Total Questions</CardTitle>
+              <BookOpen className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">{stats.totalQuestions}</div>
+              <p className="text-xs text-blue-600 dark:text-blue-400">In your collection</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-green-700 dark:text-green-300">Questions Solved</CardTitle>
+              <Target className="h-4 w-4 text-green-600 dark:text-green-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-900 dark:text-green-100">{stats.questionsSolved}</div>
+              <p className="text-xs text-green-600 dark:text-green-400">Successfully completed</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border-purple-200 dark:border-purple-800">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-purple-700 dark:text-purple-300">AI Interviews</CardTitle>
+              <MessageSquare className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-purple-900 dark:text-purple-100">{stats.interviewsCompleted}</div>
+              <p className="text-xs text-purple-600 dark:text-purple-400">Completed sessions</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900 border-orange-200 dark:border-orange-800">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-orange-700 dark:text-orange-300">Bookmarked</CardTitle>
+              <Bookmark className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-orange-900 dark:text-orange-100">{stats.bookmarkedItems}</div>
+              <p className="text-xs text-orange-600 dark:text-orange-400">Saved for later</p>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Quick Actions */}
-        <div className="bg-background/40 backdrop-blur-sm border border-border/30 rounded-xl sm:rounded-2xl shadow-lg p-6 sm:p-8">
-          <h2 className="text-xl sm:text-2xl font-semibold text-foreground mb-4 sm:mb-6">Quick Actions</h2>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-            <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
-              <h3 className="text-lg font-semibold text-foreground mb-2">Manage Questions</h3>
-              <p className="text-muted-foreground mb-4 text-sm sm:text-base">
-                View, edit, and organize your interview questions collection
-              </p>
-              <Button onClick={handleNavigateToQuestions} className="w-full">
-                <BookOpen className="h-4 w-4 mr-2" />
-                Go to Questions
-              </Button>
-            </div>
-            
-            <div className="bg-gradient-to-br from-secondary/5 to-secondary/10 border border-secondary/20 rounded-xl p-4 sm:p-6 hover:shadow-lg transition-shadow">
-              <h3 className="text-lg font-semibold text-foreground mb-2">Add New Question</h3>
-              <p className="text-muted-foreground mb-4 text-sm sm:text-base">
-                Create a new interview question with code examples and explanations
-              </p>
-              <Button onClick={handleNavigateToQuestions} variant="outline" className="w-full">
-                <Plus className="h-4 w-4 mr-2" />
-                Create Question
-              </Button>
-            </div>
-          </div>
+        {/* Progress Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Interview Prep Completion</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Overall Progress</span>
+                <span className="text-sm font-medium">{stats.interviewPrepCompletion}%</span>
+              </div>
+              <Progress value={stats.interviewPrepCompletion} className="h-3" />
+              <p className="text-xs text-muted-foreground">Keep going! You're making great progress.</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Daily Goal</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Today's Target</span>
+                <span className="text-sm font-medium">{stats.dailyGoalProgress}%</span>
+              </div>
+              <Progress value={stats.dailyGoalProgress} className="h-3" />
+              <p className="text-xs text-muted-foreground">2 more questions to reach today's goal!</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">AI Interview Progress</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Participation Rate</span>
+                <span className="text-sm font-medium">{stats.aiInterviewParticipation}%</span>
+              </div>
+              <Progress value={stats.aiInterviewParticipation} className="h-3" />
+              <p className="text-xs text-muted-foreground">Excellent AI interview engagement!</p>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Recent Activity or Empty State */}
-        {convertedQuestions.length === 0 ? (
-          <div className="text-center py-8 sm:py-12">
-            <div className="bg-muted/20 rounded-full w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center mx-auto mb-4">
-              <BookOpen className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground" />
-            </div>
-            <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2">No questions yet</h3>
-            <p className="text-muted-foreground mb-4 sm:mb-6 px-4">
-              Start building your interview question collection to track your progress
-            </p>
-            <Button onClick={handleNavigateToQuestions} className="w-full sm:w-auto">
-              <Plus className="h-4 w-4 mr-2" />
-              Create Your First Question
-            </Button>
-          </div>
-        ) : (
-          <div className="bg-background/40 backdrop-blur-sm border border-border/30 rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-4">Recent Questions</h2>
-            <div className="space-y-3">
-              {convertedQuestions.slice(0, 5).map((question) => (
-                <div key={question.id} className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
-                  <div className="min-w-0 flex-1">
-                    <h4 className="font-medium text-foreground truncate">{question.title}</h4>
-                    <p className="text-sm text-muted-foreground truncate">
-                      {question.category} • {question.language}
-                    </p>
+        {/* Quick Actions and Activity */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Quick Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl">Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button onClick={handleNavigateToAIInterview} className="w-full justify-start" size="lg">
+                <MessageSquare className="h-4 w-4 mr-3" />
+                Start AI Interview
+              </Button>
+              <Button onClick={handleNavigateToQuestions} variant="outline" className="w-full justify-start" size="lg">
+                <BookOpen className="h-4 w-4 mr-3" />
+                Practice Questions
+              </Button>
+              <Button onClick={handleNavigateToQuestions} variant="outline" className="w-full justify-start" size="lg">
+                <Bookmark className="h-4 w-4 mr-3" />
+                View Bookmarks
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Recent Activity */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl">Recent Activity</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {recentActivities.map((activity) => (
+                  <div key={activity.id} className="flex items-center space-x-3 p-3 bg-muted/30 rounded-lg">
+                    <activity.icon className="h-5 w-5 text-primary flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">{activity.action}</p>
+                      <p className="text-xs text-muted-foreground flex items-center">
+                        <Clock className="h-3 w-3 mr-1" />
+                        {activity.time}
+                      </p>
+                    </div>
                   </div>
-                  <Button size="sm" variant="outline" onClick={handleNavigateToQuestions} className="ml-2 flex-shrink-0">
-                    View
-                  </Button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Streak Counter and Motivational Tip */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="bg-gradient-to-r from-orange-500/10 to-red-500/10 border-orange-200 dark:border-orange-800">
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center">
+                <Flame className="h-5 w-5 text-orange-500 mr-2" />
+                Learning Streak
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center">
+                <div className="text-4xl font-bold text-orange-600 dark:text-orange-400 mb-2">
+                  {stats.currentStreak}
                 </div>
-              ))}
-            </div>
-            {convertedQuestions.length > 5 && (
-              <div className="mt-4 text-center">
-                <Button variant="ghost" onClick={handleNavigateToQuestions}>
-                  View All Questions
+                <p className="text-lg font-medium text-orange-700 dark:text-orange-300">Days</p>
+                <p className="text-sm text-muted-foreground mt-2">Keep it up! You're on fire! 🔥</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-200 dark:border-blue-800">
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center">
+                <Lightbulb className="h-5 w-5 text-yellow-500 mr-2" />
+                Tip of the Day
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground italic">"{motivationalTip}"</p>
+              <div className="mt-3 flex justify-end">
+                <Button variant="ghost" size="sm" className="text-xs">
+                  Get Another Tip
                 </Button>
               </div>
-            )}
-          </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Recent Questions Preview */}
+        {convertedQuestions.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl">Recent Questions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {convertedQuestions.slice(0, 3).map((question) => (
+                  <div key={question.id} className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-medium text-foreground truncate">{question.title}</h4>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {question.category} • {question.language}
+                      </p>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={handleNavigateToQuestions} className="ml-2 flex-shrink-0">
+                      View
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              {convertedQuestions.length > 3 && (
+                <div className="mt-4 text-center">
+                  <Button variant="ghost" onClick={handleNavigateToQuestions}>
+                    View All Questions ({convertedQuestions.length})
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Empty State */}
+        {convertedQuestions.length === 0 && (
+          <Card className="text-center py-12">
+            <CardContent>
+              <div className="bg-muted/20 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+                <BookOpen className="h-10 w-10 text-muted-foreground" />
+              </div>
+              <h3 className="text-xl font-semibold text-foreground mb-2">Ready to start your journey?</h3>
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                Create your first question to begin building your interview preparation collection and track your progress.
+              </p>
+              <Button onClick={handleNavigateToQuestions} size="lg">
+                <Plus className="h-4 w-4 mr-2" />
+                Create Your First Question
+              </Button>
+            </CardContent>
+          </Card>
         )}
       </div>
     </ProtectedRoute>
