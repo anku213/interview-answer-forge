@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
@@ -71,10 +70,17 @@ export const useDailyChallenges = () => {
         return;
       }
 
-      setTodayChallenge(data);
-      
-      if (data && user) {
-        await fetchUserSubmission(data.id);
+      if (data) {
+        // Type cast the difficulty field to ensure it matches our interface
+        const typedChallenge: DailyChallenge = {
+          ...data,
+          difficulty: data.difficulty as 'Easy' | 'Medium' | 'Hard'
+        };
+        setTodayChallenge(typedChallenge);
+        
+        if (user) {
+          await fetchUserSubmission(data.id);
+        }
       }
     } catch (error) {
       console.error('Error fetching today challenge:', error);
