@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,8 +22,10 @@ import {
   AlertTriangle,
   Settings as SettingsIcon,
   Bot,
-  Mail
+  Mail,
+  Calendar
 } from "lucide-react";
+import { useDailyCron } from "@/hooks/useDailyCron";
 
 const Settings = () => {
   const { apiKeys, loading, saveGeminiApiKey, deleteGeminiApiKey } = useUserApiKeys();
@@ -33,6 +34,8 @@ const Settings = () => {
   const [showApiKey, setShowApiKey] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [testingCron, setTestingCron] = useState(false);
+  const { testDailyChallengeGeneration, loading: cronLoading } = useDailyCron();
 
   // Mock state for preferences (in real app, these would be stored in database)
   const [preferences, setPreferences] = useState({
@@ -65,6 +68,12 @@ const Settings = () => {
   const handlePreferenceChange = (key: string, value: any) => {
     setPreferences(prev => ({ ...prev, [key]: value }));
     // In a real app, you would save this to the database
+  };
+
+  const handleTestDailyChallengeGeneration = async () => {
+    setTestingCron(true);
+    await testDailyChallengeGeneration();
+    setTestingCron(false);
   };
 
   if (loading) {
@@ -278,6 +287,69 @@ const Settings = () => {
                       <p className="text-xs text-muted-foreground">
                         Your API key will be encrypted and stored securely
                       </p>
+                    </div>
+                  )}
+                </div>
+
+                <Separator />
+
+                {/* Daily Challenge Generation */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <Label className="text-base font-medium">Daily Challenge Generation</Label>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Automatically generate new coding challenges daily using AI
+                      </p>
+                    </div>
+                    {apiKeys?.gemini_api_key && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleTestDailyChallengeGeneration}
+                        disabled={testingCron}
+                      >
+                        <Calendar className="h-4 w-4 mr-2" />
+                        {testingCron ? "Testing..." : "Test Generation"}
+                      </Button>
+                    )}
+                  </div>
+
+                  {apiKeys?.gemini_api_key ? (
+                    <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                      <div className="flex items-start space-x-3">
+                        <Calendar className="h-5 w-5 text-blue-600 mt-0.5" />
+                        <div>
+                          <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+                            Automatic Challenge Generation Enabled
+                          </h4>
+                          <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
+                            New coding challenges will be automatically generated daily using your Gemini API key. 
+                            Each challenge includes problem descriptions, difficulty levels, and AI-powered hints.
+                          </p>
+                          <div className="text-xs text-blue-600 dark:text-blue-400 space-y-1">
+                            <div>• Daily generation runs automatically</div>
+                            <div>• Questions are stored in your database</div>
+                            <div>• Uses your Gemini API key securely</div>
+                            <div>• Can be tested manually using the button above</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-muted/30 border border-border rounded-lg p-4">
+                      <div className="flex items-start space-x-3">
+                        <AlertTriangle className="h-5 w-5 text-muted-foreground mt-0.5" />
+                        <div>
+                          <h4 className="font-medium text-foreground mb-2">
+                            Gemini API Key Required
+                          </h4>
+                          <p className="text-sm text-muted-foreground">
+                            To enable automatic daily challenge generation, please add your Gemini API key above. 
+                            This will allow the system to generate new coding questions automatically.
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
