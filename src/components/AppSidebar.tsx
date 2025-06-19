@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { LayoutDashboard, HelpCircle, Code, User, MessageSquare, Settings, Building2 } from "lucide-react";
+import { LayoutDashboard, HelpCircle, Code, User, MessageSquare, Settings, Building2, Calendar } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -21,6 +21,11 @@ const menuItems = [
     title: "Dashboard",
     url: "/",
     icon: LayoutDashboard,
+  },
+  {
+    title: "Daily Challenge",
+    url: "/daily-challenge",
+    icon: Calendar,
   },
   {
     title: "Question Module",

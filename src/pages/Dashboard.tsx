@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useSupabaseQuestions } from "@/hooks/useSupabaseQuestions";
+import { useDailyChallenges } from "@/hooks/useDailyChallenges";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,6 +30,7 @@ import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const { questions, loading } = useSupabaseQuestions();
+  const { todayChallenge, userSubmission, userStats, loading: challengeLoading } = useDailyChallenges();
   const navigate = useNavigate();
 
   const convertedQuestions = questions.map(q => ({
@@ -51,6 +53,10 @@ const Dashboard = () => {
     navigate('/ai-interview');
   };
 
+  const handleNavigateToDailyChallenge = () => {
+    navigate('/daily-challenge');
+  };
+
   // Mock data for demo purposes - in real app, this would come from actual user data
   const stats = {
     totalQuestions: convertedQuestions.length,
@@ -62,7 +68,7 @@ const Dashboard = () => {
     dailyGoalProgress: 60, // 60% of daily goal completed
     interviewPrepCompletion: 45, // 45% overall completion
     aiInterviewParticipation: 75, // 75% AI interview participation
-    currentStreak: 5,
+    currentStreak: userStats?.current_streak || 0,
   };
 
   const recentActivities = [
@@ -72,9 +78,19 @@ const Dashboard = () => {
     { id: 4, action: "Started Python practice session", time: "3 days ago", icon: Play },
   ];
 
+  // Add daily challenge activity if user has submitted
+  if (userSubmission) {
+    recentActivities.unshift({
+      id: 0,
+      action: "Completed today's daily challenge",
+      time: "Today",
+      icon: Calendar
+    });
+  }
+
   const motivationalTip = "Consistency beats intensity. Practice a little every day to build your coding skills!";
 
-  if (loading) {
+  if (loading || challengeLoading) {
     return (
       <ProtectedRoute>
         <div className="flex items-center justify-center h-96">
@@ -211,7 +227,98 @@ const Dashboard = () => {
               </p>
             </CardContent>
           </Card>
+
+          {/* New Daily Challenge Card */}
+          <Card className="relative overflow-hidden bg-gradient-to-br from-yellow-50 via-yellow-50/50 to-white dark:from-yellow-950/50 dark:via-yellow-950/30 dark:to-background border-yellow-200/50 dark:border-yellow-800/50 hover:shadow-lg transition-all duration-300 group">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-yellow-500/10 rounded-full -mr-10 -mt-10"></div>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-sm font-semibold text-yellow-700 dark:text-yellow-300 uppercase tracking-wide">
+                Daily Challenge
+              </CardTitle>
+              <div className="bg-yellow-500/20 p-2 rounded-xl group-hover:scale-110 transition-transform">
+                <Calendar className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-yellow-900 dark:text-yellow-100 mb-1">
+                {userStats?.current_streak || 0}
+              </div>
+              <p className="text-sm text-yellow-600 dark:text-yellow-400 flex items-center">
+                <Flame className="h-3 w-3 mr-1" />
+                Day streak
+              </p>
+              {todayChallenge && (
+                <div className="mt-2">
+                  <Badge 
+                    variant={userSubmission ? "default" : "outline"} 
+                    className="text-xs"
+                  >
+                    {userSubmission ? "Completed" : "Available"}
+                  </Badge>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
+
+        {/* Daily Challenge Section */}
+        {todayChallenge && (
+          <Card className="bg-gradient-to-br from-blue-50 via-blue-50/30 to-white dark:from-blue-950/20 dark:via-blue-950/10 dark:to-background border-blue-200/50 dark:border-blue-800/30">
+            <CardHeader>
+              <CardTitle className="text-2xl flex items-center">
+                <div className="bg-blue-500/20 p-2 rounded-xl mr-3">
+                  <Calendar className="h-6 w-6 text-blue-600" />
+                </div>
+                Today's Challenge
+                <Badge 
+                  variant="secondary" 
+                  className={`ml-3 ${
+                    todayChallenge.difficulty === 'Easy' ? 'bg-green-100 text-green-700' :
+                    todayChallenge.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-red-100 text-red-700'
+                  }`}
+                >
+                  {todayChallenge.difficulty}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">{todayChallenge.title}</h3>
+                <p className="text-muted-foreground line-clamp-2">{todayChallenge.content}</p>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Badge variant="outline" className="text-xs">
+                    {todayChallenge.question_type}
+                  </Badge>
+                  {todayChallenge.tags.map((tag, index) => (
+                    <Badge key={index} variant="outline" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+                <div className="flex items-center space-x-2">
+                  {userSubmission ? (
+                    <Badge variant="default" className="bg-green-500 hover:bg-green-600">
+                      <CheckCircle2 className="h-3 w-3 mr-1" />
+                      Completed
+                    </Badge>
+                  ) : (
+                    <Button 
+                      onClick={handleNavigateToDailyChallenge}
+                      size="sm"
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <Play className="h-4 w-4 mr-2" />
+                      Start Challenge
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Enhanced Progress Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -300,6 +407,21 @@ const Dashboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {todayChallenge && !userSubmission && (
+                <Button 
+                  onClick={handleNavigateToDailyChallenge} 
+                  className="w-full justify-start bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-300" 
+                  size="lg"
+                >
+                  <div className="bg-white/20 p-1 rounded mr-3">
+                    <Calendar className="h-4 w-4" />
+                  </div>
+                  Today's Challenge
+                  <div className="ml-auto bg-white/20 px-2 py-1 rounded text-xs">
+                    {todayChallenge.difficulty}
+                  </div>
+                </Button>
+              )}
               <Button 
                 onClick={handleNavigateToAIInterview} 
                 className="w-full justify-start bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-white shadow-lg hover:shadow-xl transition-all duration-300" 
@@ -376,7 +498,7 @@ const Dashboard = () => {
             <CardHeader>
               <CardTitle className="text-xl flex items-center">
                 <Flame className="h-5 w-5 text-orange-500 mr-2" />
-                Learning Streak
+                Daily Challenge Streak
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -385,7 +507,15 @@ const Dashboard = () => {
                   {stats.currentStreak}
                 </div>
                 <p className="text-lg font-medium text-orange-700 dark:text-orange-300">Days</p>
-                <p className="text-sm text-muted-foreground mt-2">Keep it up! You're on fire! 🔥</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  {stats.currentStreak > 0 ? "Keep it up! You're on fire! 🔥" : "Start your streak today!"}
+                </p>
+                {userStats && (
+                  <div className="mt-3 text-xs text-muted-foreground">
+                    <p>Longest streak: {userStats.longest_streak} days</p>
+                    <p>Total completed: {userStats.total_completed}</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
