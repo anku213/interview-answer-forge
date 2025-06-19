@@ -14,6 +14,7 @@ import InterviewPanel from "@/pages/InterviewPanel";
 import CompanyQuestions from "@/pages/CompanyQuestions";
 import CompanyQuestionsList from "@/pages/CompanyQuestionsList";
 import QuestionDetail from "@/pages/QuestionDetail";
+import DailyChallenge from "@/pages/DailyChallenge";
 import Index from "@/pages/Index";
 import Auth from "@/pages/Auth";
 import Settings from "@/pages/Settings";
@@ -66,6 +67,7 @@ const AuthenticatedApp = () => {
       <Route path="/company-questions" element={<AppLayout><CompanyQuestions /></AppLayout>} />
       <Route path="/company-questions/:companyId" element={<AppLayout><CompanyQuestionsList /></AppLayout>} />
       <Route path="/company-questions/:companyId/:questionId" element={<AppLayout><QuestionDetail /></AppLayout>} />
+      <Route path="/daily-challenge" element={<AppLayout><DailyChallenge /></AppLayout>} />
       <Route path="/settings" element={<AppLayout><Settings /></AppLayout>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

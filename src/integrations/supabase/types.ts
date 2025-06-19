@@ -45,6 +45,47 @@ export type Database = {
         }
         Relationships: []
       }
+      challenge_solutions: {
+        Row: {
+          author_name: string | null
+          challenge_id: string | null
+          content: string
+          created_at: string
+          id: string
+          language: string | null
+          title: string
+          upvotes: number | null
+        }
+        Insert: {
+          author_name?: string | null
+          challenge_id?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          language?: string | null
+          title: string
+          upvotes?: number | null
+        }
+        Update: {
+          author_name?: string | null
+          challenge_id?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          language?: string | null
+          title?: string
+          upvotes?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_solutions_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "daily_challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           created_at: string
@@ -118,6 +159,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      daily_challenges: {
+        Row: {
+          ai_hint: string | null
+          challenge_date: string
+          content: string
+          created_at: string
+          difficulty: string
+          id: string
+          question_type: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          ai_hint?: string | null
+          challenge_date: string
+          content: string
+          created_at?: string
+          difficulty: string
+          id?: string
+          question_type?: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          ai_hint?: string | null
+          challenge_date?: string
+          content?: string
+          created_at?: string
+          difficulty?: string
+          id?: string
+          question_type?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       interview_messages: {
         Row: {
@@ -210,6 +290,74 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_challenge_stats: {
+        Row: {
+          created_at: string
+          current_streak: number | null
+          id: string
+          last_completion_date: string | null
+          longest_streak: number | null
+          total_completed: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_streak?: number | null
+          id?: string
+          last_completion_date?: string | null
+          longest_streak?: number | null
+          total_completed?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_streak?: number | null
+          id?: string
+          last_completion_date?: string | null
+          longest_streak?: number | null
+          total_completed?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_challenge_submissions: {
+        Row: {
+          answer: string
+          bookmarked: boolean | null
+          challenge_id: string | null
+          id: string
+          submitted_at: string
+          user_id: string
+        }
+        Insert: {
+          answer: string
+          bookmarked?: boolean | null
+          challenge_id?: string | null
+          id?: string
+          submitted_at?: string
+          user_id: string
+        }
+        Update: {
+          answer?: string
+          bookmarked?: boolean | null
+          challenge_id?: string | null
+          id?: string
+          submitted_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_challenge_submissions_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "daily_challenges"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_progress: {
         Row: {
