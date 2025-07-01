@@ -267,6 +267,60 @@ export type Database = {
         }
         Relationships: []
       }
+      resume_analyses: {
+        Row: {
+          ai_feedback_formatting: string | null
+          ai_feedback_keywords: string | null
+          ai_feedback_structure: string | null
+          created_at: string
+          experience_level: string | null
+          id: string
+          improvement_suggestions: string | null
+          job_role: string
+          overall_score: number | null
+          resume_file_name: string
+          resume_file_url: string | null
+          status: string | null
+          updated_at: string
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          ai_feedback_formatting?: string | null
+          ai_feedback_keywords?: string | null
+          ai_feedback_structure?: string | null
+          created_at?: string
+          experience_level?: string | null
+          id?: string
+          improvement_suggestions?: string | null
+          job_role: string
+          overall_score?: number | null
+          resume_file_name: string
+          resume_file_url?: string | null
+          status?: string | null
+          updated_at?: string
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          ai_feedback_formatting?: string | null
+          ai_feedback_keywords?: string | null
+          ai_feedback_structure?: string | null
+          created_at?: string
+          experience_level?: string | null
+          id?: string
+          improvement_suggestions?: string | null
+          job_role?: string
+          overall_score?: number | null
+          resume_file_name?: string
+          resume_file_url?: string | null
+          status?: string | null
+          updated_at?: string
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_api_keys: {
         Row: {
           created_at: string
