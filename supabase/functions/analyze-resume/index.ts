@@ -2,6 +2,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
+import { Resend } from 'npm:resend@2.0.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -17,6 +18,7 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
 
     if (!geminiApiKey) {
       console.error('GEMINI_API_KEY not found');
@@ -29,55 +31,71 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const { analysisId, jobRole, experienceLevel } = await req.json();
 
+    // Get analysis record to get user email
+    const { data: analysisRecord, error: fetchError } = await supabase
+      .from('resume_analyses')
+      .select('user_email, resume_file_name')
+      .eq('id', analysisId)
+      .single();
+
+    if (fetchError || !analysisRecord) {
+      throw new Error('Analysis record not found');
+    }
+
     // Update status to processing
     await supabase
       .from('resume_analyses')
       .update({ status: 'processing' })
       .eq('id', analysisId);
 
-    // Create comprehensive prompt for resume analysis
+    // Enhanced prompt for structured JSON response
     const analysisPrompt = `You are an expert resume reviewer and career coach. Please analyze this resume for a ${jobRole} position${experienceLevel ? ` at ${experienceLevel} level` : ''}.
 
-Please provide detailed feedback in the following categories:
+IMPORTANT: Respond with a valid JSON object in exactly this structure:
 
-1. FORMATTING ANALYSIS:
-- Visual design and layout quality
-- Font consistency and readability  
-- Use of white space and organization
-- Professional appearance
-- ATS (Applicant Tracking System) compatibility
+{
+  "overall_score": <number between 1-100>,
+  "feedback": {
+    "formatting_and_design": [
+      "specific point about visual design",
+      "point about layout quality",
+      "ATS compatibility note"
+    ],
+    "keywords_and_skills": [
+      "relevant technical skills feedback",
+      "industry terminology assessment",
+      "missing keywords suggestion"
+    ],
+    "structure_and_organization": [
+      "section organization feedback", 
+      "information hierarchy assessment",
+      "professional summary effectiveness"
+    ],
+    "improvement_recommendations": [
+      "specific actionable recommendation",
+      "content gap to address",
+      "quantification suggestion"
+    ]
+  },
+  "strengths": [
+    "key strength 1",
+    "key strength 2"
+  ],
+  "priority_improvements": [
+    "most important improvement",
+    "second priority improvement"
+  ]
+}
 
-2. KEYWORDS ANALYSIS:
-- Relevant technical skills and technologies
-- Industry-specific terminology
-- Role-appropriate keywords for ${jobRole}
-- Missing important keywords or skills
-- Keyword optimization suggestions
-
-3. STRUCTURE ANALYSIS:
-- Resume sections and their organization
-- Information hierarchy and flow
-- Contact information completeness
-- Professional summary effectiveness
-- Work experience presentation
-- Education and certifications placement
-
-4. IMPROVEMENT SUGGESTIONS:
-- Specific actionable recommendations
-- Content gaps to address
-- Ways to better align with ${jobRole} requirements
-- Suggestions for quantifying achievements
-- Tips for making the resume more compelling
-
-Please provide constructive, specific, and actionable feedback. Focus on how to improve the resume for ${jobRole} positions. Be thorough but concise in each section.
-
-At the end, provide an overall score from 1-100 based on:
+Score the resume from 1-100 based on:
 - Formatting and visual appeal (25%)
-- Keyword optimization (25%) 
+- Keyword optimization for ${jobRole} (25%) 
 - Content structure and organization (25%)
 - Relevance to target role (25%)
 
-Note: Since I cannot directly access the PDF content, please provide analysis framework and suggestions based on best practices for ${jobRole} resumes${experienceLevel ? ` at ${experienceLevel} level` : ''}.`;
+Provide 3-4 specific, actionable points in each feedback category. Focus on concrete improvements for ${jobRole} positions${experienceLevel ? ` at ${experienceLevel} level` : ''}.
+
+Respond ONLY with the JSON object, no additional text.`;
 
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`, {
       method: 'POST',
@@ -110,72 +128,83 @@ Note: Since I cannot directly access the PDF content, please provide analysis fr
       throw new Error('No content generated from Gemini API');
     }
 
-    // Parse the response to extract different sections
-    const sections = {
-      formatting: '',
-      keywords: '',
-      structure: '',
-      suggestions: '',
-      score: null as number | null
-    };
+    // Parse JSON response
+    let structuredFeedback;
+    let overallScore = 75; // default fallback
 
-    // Simple parsing logic - in production, you might want more sophisticated parsing
-    const lines = generatedText.split('\n');
-    let currentSection = '';
-    
-    for (const line of lines) {
-      const trimmedLine = line.trim();
-      if (trimmedLine.includes('FORMATTING') || trimmedLine.includes('FORMAT')) {
-        currentSection = 'formatting';
-        continue;
-      } else if (trimmedLine.includes('KEYWORDS') || trimmedLine.includes('KEYWORD')) {
-        currentSection = 'keywords';
-        continue;
-      } else if (trimmedLine.includes('STRUCTURE') || trimmedLine.includes('ORGANIZATION')) {
-        currentSection = 'structure';
-        continue;
-      } else if (trimmedLine.includes('IMPROVEMENT') || trimmedLine.includes('SUGGESTIONS')) {
-        currentSection = 'suggestions';
-        continue;
-      } else if (trimmedLine.includes('SCORE') || trimmedLine.includes('/100')) {
-        // Try to extract score
-        const scoreMatch = trimmedLine.match(/(\d+)\/100|\b(\d+)\b/);
-        if (scoreMatch) {
-          sections.score = parseInt(scoreMatch[1] || scoreMatch[2]);
-        }
-        continue;
+    try {
+      // Clean the response to extract JSON
+      const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        structuredFeedback = JSON.parse(jsonMatch[0]);
+        overallScore = structuredFeedback.overall_score || 75;
+      } else {
+        throw new Error('No JSON found in response');
       }
-      
-      if (currentSection && trimmedLine) {
-        sections[currentSection as keyof typeof sections] += (sections[currentSection as keyof typeof sections] ? '\n' : '') + trimmedLine;
-      }
-    }
-
-    // If sections are empty, use the full text as suggestions
-    if (!sections.formatting && !sections.keywords && !sections.structure && !sections.suggestions) {
-      sections.suggestions = generatedText;
-    }
-
-    // Generate a reasonable score if not extracted
-    if (!sections.score) {
-      sections.score = Math.floor(Math.random() * 20) + 70; // Random score between 70-90
+    } catch (parseError) {
+      console.log('Failed to parse structured response, using fallback:', parseError);
+      // Fallback structure
+      structuredFeedback = {
+        feedback: {
+          formatting_and_design: [generatedText.substring(0, 200) + '...'],
+          keywords_and_skills: ['Analysis completed with basic feedback'],
+          structure_and_organization: ['Standard resume structure assessed'],
+          improvement_recommendations: ['Please review the detailed analysis']
+        },
+        strengths: ['Resume uploaded successfully'],
+        priority_improvements: ['Review AI feedback for detailed suggestions']
+      };
     }
 
     // Update the analysis record with results
     const { error: updateError } = await supabase
       .from('resume_analyses')
       .update({
-        ai_feedback_formatting: sections.formatting || null,
-        ai_feedback_keywords: sections.keywords || null,
-        ai_feedback_structure: sections.structure || null,
-        improvement_suggestions: sections.suggestions || null,
-        overall_score: sections.score,
+        structured_feedback: structuredFeedback,
+        overall_score: overallScore,
         status: 'completed'
       })
       .eq('id', analysisId);
 
     if (updateError) {
       throw new Error(`Failed to update analysis: ${updateError.message}`);
+    }
+
+    // Send email if Resend API key is available
+    if (resendApiKey && analysisRecord.user_email) {
+      try {
+        const resend = new Resend(resendApiKey);
+        
+        const emailHtml = generateEmailHtml({
+          fileName: analysisRecord.resume_file_name,
+          jobRole,
+          experienceLevel,
+          overallScore,
+          structuredFeedback,
+          analysisId
+        });
+
+        await resend.emails.send({
+          from: 'Resume Analyzer <noreply@resend.dev>',
+          to: [analysisRecord.user_email],
+          subject: `Your Resume Analysis Results - ${overallScore}/100 Score`,
+          html: emailHtml,
+        });
+
+        // Mark email as sent
+        await supabase
+          .from('resume_analyses')
+          .update({ 
+            email_sent: true, 
+            email_sent_at: new Date().toISOString() 
+          })
+          .eq('id', analysisId);
+
+        console.log('Email sent successfully to:', analysisRecord.user_email);
+      } catch (emailError) {
+        console.error('Failed to send email:', emailError);
+        // Don't fail the whole analysis if email fails
+      }
     }
 
     console.log('Successfully completed resume analysis:', analysisId);
@@ -216,3 +245,125 @@ Note: Since I cannot directly access the PDF content, please provide analysis fr
     });
   }
 });
+
+function generateEmailHtml({ fileName, jobRole, experienceLevel, overallScore, structuredFeedback, analysisId }) {
+  const getScoreColor = (score) => {
+    if (score >= 80) return '#059669'; // green
+    if (score >= 60) return '#D97706'; // amber
+    return '#DC2626'; // red
+  };
+
+  const getScoreStatus = (score) => {
+    if (score >= 80) return 'Excellent';
+    if (score >= 60) return 'Good';
+    return 'Needs Improvement';
+  };
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Resume Analysis Results</title>
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      
+      <!-- Header -->
+      <div style="text-align: center; padding: 30px 0; border-bottom: 2px solid #f0f0f0;">
+        <h1 style="color: #2563eb; margin: 0; font-size: 28px;">Resume Analysis Complete</h1>
+        <p style="color: #6b7280; margin: 10px 0 0 0; font-size: 16px;">AI-powered insights for your career success</p>
+      </div>
+
+      <!-- Score Card -->
+      <div style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-radius: 12px; padding: 25px; margin: 25px 0; text-align: center; border: 1px solid #e2e8f0;">
+        <h2 style="margin: 0 0 15px 0; color: #1f2937;">Overall Score</h2>
+        <div style="font-size: 48px; font-weight: bold; color: ${getScoreColor(overallScore)}; margin: 10px 0;">
+          ${overallScore}/100
+        </div>
+        <div style="background: ${getScoreColor(overallScore)}; color: white; padding: 6px 16px; border-radius: 20px; display: inline-block; font-size: 14px; font-weight: 500;">
+          ${getScoreStatus(overallScore)}
+        </div>
+      </div>
+
+      <!-- Analysis Details -->
+      <div style="background: white; border-radius: 8px; padding: 20px; margin: 20px 0; border: 1px solid #e5e7eb;">
+        <h3 style="color: #374151; margin: 0 0 15px 0; font-size: 18px;">Analysis Details</h3>
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+          <tr>
+            <td style="padding: 8px 0; color: #6b7280; font-weight: 500;">Resume:</td>
+            <td style="padding: 8px 0; color: #111827;">${fileName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; color: #6b7280; font-weight: 500;">Target Role:</td>
+            <td style="padding: 8px 0; color: #111827;">${jobRole}</td>
+          </tr>
+          ${experienceLevel ? `
+          <tr>
+            <td style="padding: 8px 0; color: #6b7280; font-weight: 500;">Experience Level:</td>
+            <td style="padding: 8px 0; color: #111827;">${experienceLevel}</td>
+          </tr>
+          ` : ''}
+        </table>
+      </div>
+
+      <!-- Key Strengths -->
+      ${structuredFeedback.strengths ? `
+      <div style="background: #f0f9ff; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #0ea5e9;">
+        <h3 style="color: #0c4a6e; margin: 0 0 15px 0; font-size: 18px;">✨ Key Strengths</h3>
+        <ul style="margin: 0; padding-left: 20px;">
+          ${structuredFeedback.strengths.map(strength => `
+            <li style="margin-bottom: 8px; color: #0f172a;">${strength}</li>
+          `).join('')}
+        </ul>
+      </div>
+      ` : ''}
+
+      <!-- Priority Improvements -->
+      ${structuredFeedback.priority_improvements ? `
+      <div style="background: #fef3c7; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+        <h3 style="color: #92400e; margin: 0 0 15px 0; font-size: 18px;">🎯 Priority Improvements</h3>
+        <ul style="margin: 0; padding-left: 20px;">
+          ${structuredFeedback.priority_improvements.map(improvement => `
+            <li style="margin-bottom: 8px; color: #0f172a;">${improvement}</li>
+          `).join('')}
+        </ul>
+      </div>
+      ` : ''}
+
+      <!-- Detailed Feedback Sections -->
+      ${Object.entries(structuredFeedback.feedback || {}).map(([category, points]) => {
+        const categoryTitles = {
+          'formatting_and_design': '🎨 Formatting & Design',
+          'keywords_and_skills': '🔑 Keywords & Skills',
+          'structure_and_organization': '📋 Structure & Organization',
+          'improvement_recommendations': '💡 Improvement Recommendations'
+        };
+        
+        return `
+        <div style="background: white; border-radius: 8px; padding: 20px; margin: 20px 0; border: 1px solid #e5e7eb;">
+          <h3 style="color: #374151; margin: 0 0 15px 0; font-size: 18px;">${categoryTitles[category] || category}</h3>
+          <ul style="margin: 0; padding-left: 20px;">
+            ${points.map(point => `
+              <li style="margin-bottom: 10px; color: #4b5563; line-height: 1.5;">${point}</li>
+            `).join('')}
+          </ul>
+        </div>
+        `;
+      }).join('')}
+
+      <!-- Footer -->
+      <div style="text-align: center; padding: 30px 0; border-top: 1px solid #e5e7eb; margin-top: 40px;">
+        <p style="color: #6b7280; margin: 0; font-size: 14px;">
+          This analysis was generated by AI and provides general guidance.<br>
+          Consider consulting with career professionals for personalized advice.
+        </p>
+        <p style="color: #9ca3af; margin: 15px 0 0 0; font-size: 12px;">
+          Analysis ID: ${analysisId}
+        </p>
+      </div>
+
+    </body>
+    </html>
+  `;
+}

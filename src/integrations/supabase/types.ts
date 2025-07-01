@@ -273,6 +273,8 @@ export type Database = {
           ai_feedback_keywords: string | null
           ai_feedback_structure: string | null
           created_at: string
+          email_sent: boolean | null
+          email_sent_at: string | null
           experience_level: string | null
           id: string
           improvement_suggestions: string | null
@@ -281,8 +283,9 @@ export type Database = {
           resume_file_name: string
           resume_file_url: string | null
           status: string | null
+          structured_feedback: Json | null
           updated_at: string
-          user_email: string | null
+          user_email: string
           user_id: string | null
         }
         Insert: {
@@ -290,6 +293,8 @@ export type Database = {
           ai_feedback_keywords?: string | null
           ai_feedback_structure?: string | null
           created_at?: string
+          email_sent?: boolean | null
+          email_sent_at?: string | null
           experience_level?: string | null
           id?: string
           improvement_suggestions?: string | null
@@ -298,8 +303,9 @@ export type Database = {
           resume_file_name: string
           resume_file_url?: string | null
           status?: string | null
+          structured_feedback?: Json | null
           updated_at?: string
-          user_email?: string | null
+          user_email: string
           user_id?: string | null
         }
         Update: {
@@ -307,6 +313,8 @@ export type Database = {
           ai_feedback_keywords?: string | null
           ai_feedback_structure?: string | null
           created_at?: string
+          email_sent?: boolean | null
+          email_sent_at?: string | null
           experience_level?: string | null
           id?: string
           improvement_suggestions?: string | null
@@ -315,8 +323,9 @@ export type Database = {
           resume_file_name?: string
           resume_file_url?: string | null
           status?: string | null
+          structured_feedback?: Json | null
           updated_at?: string
-          user_email?: string | null
+          user_email?: string
           user_id?: string | null
         }
         Relationships: []

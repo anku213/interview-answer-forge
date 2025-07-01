@@ -8,7 +8,7 @@ interface AnalyzeResumeParams {
   file: File;
   jobRole: string;
   experienceLevel?: string;
-  userEmail?: string;
+  userEmail: string; // Now required
 }
 
 export const useResumeAnalyzer = () => {
@@ -17,6 +17,10 @@ export const useResumeAnalyzer = () => {
 
   const analyzeResume = async (params: AnalyzeResumeParams) => {
     const { file, jobRole, experienceLevel, userEmail } = params;
+    
+    if (!userEmail || !userEmail.trim()) {
+      throw new Error('Email address is required');
+    }
     
     // Upload file to storage
     const fileName = `${Date.now()}-${file.name}`;
@@ -35,12 +39,12 @@ export const useResumeAnalyzer = () => {
       .from('resumes')
       .getPublicUrl(filePath);
 
-    // Create initial analysis record
+    // Create initial analysis record with required email
     const { data: analysisData, error: insertError } = await supabase
       .from('resume_analyses')
       .insert([{
         user_id: user?.id || null,
-        user_email: userEmail || user?.email || null,
+        user_email: userEmail.trim(), // Required field
         resume_file_name: file.name,
         resume_file_url: publicUrl,
         job_role: jobRole,

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Upload, FileText, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Upload, FileText, Loader2, CheckCircle2, AlertCircle, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useResumeAnalyzer } from "@/hooks/useResumeAnalyzer";
 
@@ -89,13 +89,27 @@ export const ResumeUpload = () => {
     }
   };
 
+  const isValidEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!file || !jobRole) {
+    if (!file || !jobRole || !userEmail.trim()) {
       toast({
         title: "Missing information",
-        description: "Please upload a resume and select a job role.",
+        description: "Please upload a resume, select a job role, and provide your email address.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!isValidEmail(userEmail.trim())) {
+      toast({
+        title: "Invalid email",
+        description: "Please enter a valid email address.",
         variant: "destructive"
       });
       return;
@@ -106,7 +120,7 @@ export const ResumeUpload = () => {
         file,
         jobRole,
         experienceLevel,
-        userEmail: userEmail.trim() || undefined
+        userEmail: userEmail.trim()
       });
       
       // Reset form
@@ -118,7 +132,7 @@ export const ResumeUpload = () => {
       
       toast({
         title: "Analysis started",
-        description: "Your resume is being analyzed. This may take a few moments.",
+        description: "Your resume is being analyzed. You'll receive the results via email shortly.",
       });
     } catch (error) {
       console.error("Analysis error:", error);
@@ -214,18 +228,18 @@ export const ResumeUpload = () => {
         </Card>
       </div>
 
-      {/* Step 2: Job Role Selection */}
+      {/* Step 2: Job Details */}
       <div className="space-y-4">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-medium">
             2
           </div>
-          <Label className="text-lg font-semibold text-gray-900">Select Target Job Role</Label>
+          <Label className="text-lg font-semibold text-gray-900">Job Details</Label>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-3">
-            <Label htmlFor="jobRole" className="text-sm font-medium">Job Role *</Label>
+            <Label htmlFor="jobRole" className="text-sm font-medium">Target Job Role *</Label>
             <Select value={jobRole} onValueChange={setJobRole}>
               <SelectTrigger className="h-12">
                 <SelectValue placeholder="Select the job role you're applying for" />
@@ -256,28 +270,42 @@ export const ResumeUpload = () => {
             </Select>
           </div>
         </div>
-
-        <div className="space-y-3">
-          <Label htmlFor="email" className="text-sm font-medium">Email (Optional)</Label>
-          <Input
-            id="email"
-            type="email"
-            value={userEmail}
-            onChange={(e) => setUserEmail(e.target.value)}
-            placeholder="your.email@example.com"
-            className="h-12"
-          />
-          <p className="text-sm text-gray-500">
-            Provide your email to receive analysis results and for better tracking.
-          </p>
-        </div>
       </div>
 
-      {/* Step 3: Analyze Button */}
+      {/* Step 3: Email Address */}
       <div className="space-y-4">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-medium">
             3
+          </div>
+          <Label className="text-lg font-semibold text-gray-900">Email Address</Label>
+        </div>
+
+        <div className="space-y-3">
+          <Label htmlFor="email" className="text-sm font-medium">Email Address *</Label>
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Input
+              id="email"
+              type="email"
+              value={userEmail}
+              onChange={(e) => setUserEmail(e.target.value)}
+              placeholder="your.email@example.com"
+              className="h-12 pl-10"
+              required
+            />
+          </div>
+          <p className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg border border-blue-200">
+            <strong>📧 Email Delivery:</strong> Your detailed analysis report will be sent to this email address with structured feedback, actionable recommendations, and your overall score.
+          </p>
+        </div>
+      </div>
+
+      {/* Step 4: Analyze Button */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-medium">
+            4
           </div>
           <Label className="text-lg font-semibold text-gray-900">Get Your Analysis</Label>
         </div>
@@ -286,7 +314,7 @@ export const ResumeUpload = () => {
           <Button 
             type="submit" 
             className="w-full md:w-auto px-12 py-6 text-lg font-semibold" 
-            disabled={loading || !file || !jobRole}
+            disabled={loading || !file || !jobRole || !userEmail.trim()}
             size="lg"
           >
             {loading ? (
@@ -308,7 +336,7 @@ export const ResumeUpload = () => {
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <span className="text-sm">AI is analyzing your resume...</span>
               </div>
-              <p className="text-xs text-gray-500">This usually takes 30-60 seconds</p>
+              <p className="text-xs text-gray-500">Analysis results will be emailed to you within 1-2 minutes</p>
             </div>
           )}
         </div>
