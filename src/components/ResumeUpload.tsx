@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { Upload, FileText, Loader2 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Upload, FileText, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useResumeAnalyzer } from "@/hooks/useResumeAnalyzer";
 
@@ -41,6 +42,7 @@ export const ResumeUpload = () => {
   const [experienceLevel, setExperienceLevel] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [dragOver, setDragOver] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   
   const { analyzeResume, loading } = useResumeAnalyzer();
   const { toast } = useToast();
@@ -65,6 +67,17 @@ export const ResumeUpload = () => {
     }
 
     setFile(selectedFile);
+    // Simulate upload progress
+    setUploadProgress(0);
+    const interval = setInterval(() => {
+      setUploadProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          return 100;
+        }
+        return prev + 10;
+      });
+    }, 100);
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -101,6 +114,7 @@ export const ResumeUpload = () => {
       setJobRole("");
       setExperienceLevel("");
       setUserEmail("");
+      setUploadProgress(0);
       
       toast({
         title: "Analysis started",
@@ -117,15 +131,23 @@ export const ResumeUpload = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* File Upload Area */}
+    <form onSubmit={handleSubmit} className="space-y-8">
+      {/* Step 1: File Upload */}
       <div className="space-y-4">
-        <Label htmlFor="resume">Resume (PDF only)</Label>
-        <div
-          className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-medium">
+            1
+          </div>
+          <Label className="text-lg font-semibold text-gray-900">Upload Your Resume</Label>
+        </div>
+        
+        <Card
+          className={`border-2 border-dashed transition-all duration-200 ${
             dragOver
-              ? "border-blue-500 bg-blue-50"
-              : "border-gray-300 hover:border-gray-400"
+              ? "border-blue-500 bg-blue-50 scale-105"
+              : file 
+              ? "border-green-500 bg-green-50"
+              : "border-gray-300 hover:border-gray-400 hover:bg-gray-50"
           }`}
           onDragOver={(e) => {
             e.preventDefault();
@@ -134,114 +156,163 @@ export const ResumeUpload = () => {
           onDragLeave={() => setDragOver(false)}
           onDrop={handleDrop}
         >
-          {file ? (
-            <div className="flex items-center justify-center space-x-2">
-              <FileText className="h-8 w-8 text-green-600" />
-              <div>
-                <p className="font-medium text-green-700">{file.name}</p>
-                <p className="text-sm text-gray-500">
-                  {(file.size / 1024 / 1024).toFixed(2)} MB
-                </p>
+          <CardContent className="p-8 text-center">
+            {file ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-center">
+                  <CheckCircle2 className="h-12 w-12 text-green-600" />
+                </div>
+                <div>
+                  <p className="font-semibold text-green-700 text-lg">{file.name}</p>
+                  <p className="text-sm text-gray-600">
+                    {(file.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                </div>
+                {uploadProgress < 100 && (
+                  <div className="space-y-2 max-w-xs mx-auto">
+                    <Progress value={uploadProgress} className="h-2" />
+                    <p className="text-xs text-gray-500">Uploading... {uploadProgress}%</p>
+                  </div>
+                )}
               </div>
-            </div>
-          ) : (
-            <div>
-              <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-lg font-medium text-gray-700 mb-2">
-                Drop your resume here, or click to browse
-              </p>
-              <p className="text-sm text-gray-500">PDF files only, max 10MB</p>
-            </div>
-          )}
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center justify-center">
+                  <div className="p-4 bg-blue-100 rounded-full">
+                    <Upload className="h-8 w-8 text-blue-600" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xl font-semibold text-gray-700 mb-2">
+                    Drop your resume here, or click to browse
+                  </p>
+                  <p className="text-gray-500">PDF files only, max 10MB</p>
+                </div>
+              </div>
+            )}
+            <Input
+              type="file"
+              accept=".pdf"
+              onChange={(e) => {
+                const files = e.target.files;
+                if (files && files.length > 0) {
+                  handleFileSelect(files[0]);
+                }
+              }}
+              className="hidden"
+              id="resume-upload"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-6"
+              onClick={() => document.getElementById("resume-upload")?.click()}
+            >
+              Choose File
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Step 2: Job Role Selection */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-medium">
+            2
+          </div>
+          <Label className="text-lg font-semibold text-gray-900">Select Target Job Role</Label>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-3">
+            <Label htmlFor="jobRole" className="text-sm font-medium">Job Role *</Label>
+            <Select value={jobRole} onValueChange={setJobRole}>
+              <SelectTrigger className="h-12">
+                <SelectValue placeholder="Select the job role you're applying for" />
+              </SelectTrigger>
+              <SelectContent>
+                {jobRoles.map((role) => (
+                  <SelectItem key={role} value={role}>
+                    {role}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-3">
+            <Label htmlFor="experienceLevel" className="text-sm font-medium">Experience Level</Label>
+            <Select value={experienceLevel} onValueChange={setExperienceLevel}>
+              <SelectTrigger className="h-12">
+                <SelectValue placeholder="Select your experience level (optional)" />
+              </SelectTrigger>
+              <SelectContent>
+                {experienceLevels.map((level) => (
+                  <SelectItem key={level} value={level}>
+                    {level}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <Label htmlFor="email" className="text-sm font-medium">Email (Optional)</Label>
           <Input
-            id="resume"
-            type="file"
-            accept=".pdf"
-            onChange={(e) => {
-              const files = e.target.files;
-              if (files && files.length > 0) {
-                handleFileSelect(files[0]);
-              }
-            }}
-            className="hidden"
+            id="email"
+            type="email"
+            value={userEmail}
+            onChange={(e) => setUserEmail(e.target.value)}
+            placeholder="your.email@example.com"
+            className="h-12"
           />
-          <Button
-            type="button"
-            variant="outline"
-            className="mt-4"
-            onClick={() => document.getElementById("resume")?.click()}
-          >
-            Choose File
-          </Button>
+          <p className="text-sm text-gray-500">
+            Provide your email to receive analysis results and for better tracking.
+          </p>
         </div>
       </div>
 
-      {/* Job Role Selection */}
-      <div className="space-y-2">
-        <Label htmlFor="jobRole">Target Job Role *</Label>
-        <Select value={jobRole} onValueChange={setJobRole}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select the job role you're applying for" />
-          </SelectTrigger>
-          <SelectContent>
-            {jobRoles.map((role) => (
-              <SelectItem key={role} value={role}>
-                {role}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Step 3: Analyze Button */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-medium">
+            3
+          </div>
+          <Label className="text-lg font-semibold text-gray-900">Get Your Analysis</Label>
+        </div>
 
-      {/* Experience Level */}
-      <div className="space-y-2">
-        <Label htmlFor="experienceLevel">Experience Level</Label>
-        <Select value={experienceLevel} onValueChange={setExperienceLevel}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select your experience level (optional)" />
-          </SelectTrigger>
-          <SelectContent>
-            {experienceLevels.map((level) => (
-              <SelectItem key={level} value={level}>
-                {level}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="text-center">
+          <Button 
+            type="submit" 
+            className="w-full md:w-auto px-12 py-6 text-lg font-semibold" 
+            disabled={loading || !file || !jobRole}
+            size="lg"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+                Analyzing Resume...
+              </>
+            ) : (
+              <>
+                <FileText className="mr-3 h-5 w-5" />
+                Analyze My Resume
+              </>
+            )}
+          </Button>
+          
+          {loading && (
+            <div className="mt-4 space-y-2">
+              <div className="flex items-center justify-center gap-2 text-blue-600">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="text-sm">AI is analyzing your resume...</span>
+              </div>
+              <p className="text-xs text-gray-500">This usually takes 30-60 seconds</p>
+            </div>
+          )}
+        </div>
       </div>
-
-      {/* Email (Optional) */}
-      <div className="space-y-2">
-        <Label htmlFor="email">Email (Optional)</Label>
-        <Input
-          id="email"
-          type="email"
-          value={userEmail}
-          onChange={(e) => setUserEmail(e.target.value)}
-          placeholder="your.email@example.com"
-        />
-        <p className="text-sm text-gray-500">
-          Provide your email to receive analysis results and for better tracking.
-        </p>
-      </div>
-
-      <Button 
-        type="submit" 
-        className="w-full" 
-        disabled={loading || !file || !jobRole}
-      >
-        {loading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Analyzing Resume...
-          </>
-        ) : (
-          <>
-            <FileText className="mr-2 h-4 w-4" />
-            Analyze Resume
-          </>
-        )}
-      </Button>
     </form>
   );
 };
