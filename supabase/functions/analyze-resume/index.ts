@@ -28,19 +28,28 @@ serve(async (req) => {
       });
     }
 
+    if (!resendApiKey) {
+      console.error('RESEND_API_KEY not found - email functionality will be disabled');
+    }
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const { analysisId, jobRole, experienceLevel } = await req.json();
+
+    console.log('Starting analysis for ID:', analysisId);
 
     // Get analysis record to get user email
     const { data: analysisRecord, error: fetchError } = await supabase
       .from('resume_analyses')
-      .select('user_email, resume_file_name')
+      .select('user_email, resume_file_name, resume_file_url')
       .eq('id', analysisId)
       .single();
 
     if (fetchError || !analysisRecord) {
+      console.error('Analysis record fetch error:', fetchError);
       throw new Error('Analysis record not found');
     }
+
+    console.log('Found analysis record for email:', analysisRecord.user_email);
 
     // Update status to processing
     await supabase
@@ -48,8 +57,25 @@ serve(async (req) => {
       .update({ status: 'processing' })
       .eq('id', analysisId);
 
+    // Download and analyze the resume file
+    let resumeContent = '';
+    if (analysisRecord.resume_file_url) {
+      try {
+        const fileResponse = await fetch(analysisRecord.resume_file_url);
+        if (fileResponse.ok) {
+          resumeContent = await fileResponse.text();
+        } else {
+          console.warn('Could not download resume file for analysis');
+        }
+      } catch (error) {
+        console.warn('Error downloading resume file:', error);
+      }
+    }
+
     // Enhanced prompt for structured JSON response
     const analysisPrompt = `You are an expert resume reviewer and career coach. Please analyze this resume for a ${jobRole} position${experienceLevel ? ` at ${experienceLevel} level` : ''}.
+
+${resumeContent ? `Resume Content: ${resumeContent.substring(0, 3000)}` : 'Resume file could not be processed for content analysis.'}
 
 IMPORTANT: Respond with a valid JSON object in exactly this structure:
 
@@ -58,7 +84,7 @@ IMPORTANT: Respond with a valid JSON object in exactly this structure:
   "feedback": {
     "formatting_and_design": [
       "specific point about visual design",
-      "point about layout quality",
+      "point about layout quality", 
       "ATS compatibility note"
     ],
     "keywords_and_skills": [
@@ -67,8 +93,8 @@ IMPORTANT: Respond with a valid JSON object in exactly this structure:
       "missing keywords suggestion"
     ],
     "structure_and_organization": [
-      "section organization feedback", 
-      "information hierarchy assessment",
+      "section organization feedback",
+      "information hierarchy assessment", 
       "professional summary effectiveness"
     ],
     "improvement_recommendations": [
@@ -97,6 +123,8 @@ Provide 3-4 specific, actionable points in each feedback category. Focus on conc
 
 Respond ONLY with the JSON object, no additional text.`;
 
+    console.log('Calling Gemini API for analysis...');
+
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`, {
       method: 'POST',
       headers: {
@@ -118,6 +146,7 @@ Respond ONLY with the JSON object, no additional text.`;
     });
 
     if (!response.ok) {
+      console.error('Gemini API error:', response.status, await response.text());
       throw new Error(`Gemini API error: ${response.status}`);
     }
 
@@ -127,6 +156,8 @@ Respond ONLY with the JSON object, no additional text.`;
     if (!generatedText) {
       throw new Error('No content generated from Gemini API');
     }
+
+    console.log('Gemini API response received');
 
     // Parse JSON response
     let structuredFeedback;
@@ -138,6 +169,7 @@ Respond ONLY with the JSON object, no additional text.`;
       if (jsonMatch) {
         structuredFeedback = JSON.parse(jsonMatch[0]);
         overallScore = structuredFeedback.overall_score || 75;
+        console.log('Successfully parsed structured feedback with score:', overallScore);
       } else {
         throw new Error('No JSON found in response');
       }
@@ -167,12 +199,16 @@ Respond ONLY with the JSON object, no additional text.`;
       .eq('id', analysisId);
 
     if (updateError) {
+      console.error('Database update error:', updateError);
       throw new Error(`Failed to update analysis: ${updateError.message}`);
     }
+
+    console.log('Analysis updated in database successfully');
 
     // Send email if Resend API key is available
     if (resendApiKey && analysisRecord.user_email) {
       try {
+        console.log('Attempting to send email to:', analysisRecord.user_email);
         const resend = new Resend(resendApiKey);
         
         const emailHtml = generateEmailHtml({
@@ -184,12 +220,19 @@ Respond ONLY with the JSON object, no additional text.`;
           analysisId
         });
 
-        await resend.emails.send({
-          from: 'Resume Analyzer <noreply@resend.dev>',
+        const emailResult = await resend.emails.send({
+          from: 'Resume Analyzer <onboarding@resend.dev>',
           to: [analysisRecord.user_email],
           subject: `Your Resume Analysis Results - ${overallScore}/100 Score`,
           html: emailHtml,
         });
+
+        console.log('Resend API response:', emailResult);
+
+        if (emailResult.error) {
+          console.error('Resend API error:', emailResult.error);
+          throw emailResult.error;
+        }
 
         // Mark email as sent
         await supabase
@@ -203,8 +246,17 @@ Respond ONLY with the JSON object, no additional text.`;
         console.log('Email sent successfully to:', analysisRecord.user_email);
       } catch (emailError) {
         console.error('Failed to send email:', emailError);
-        // Don't fail the whole analysis if email fails
+        // Don't fail the whole analysis if email fails, but log the error
+        await supabase
+          .from('resume_analyses')
+          .update({ 
+            email_sent: false,
+            email_sent_at: null
+          })
+          .eq('id', analysisId);
       }
+    } else {
+      console.log('Email sending skipped - missing RESEND_API_KEY or user email');
     }
 
     console.log('Successfully completed resume analysis:', analysisId);
