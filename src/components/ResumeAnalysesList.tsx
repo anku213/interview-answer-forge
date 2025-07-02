@@ -10,6 +10,27 @@ import { ResumeAnalysisDetail } from "@/components/ResumeAnalysisDetail";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import type { Json } from "@/integrations/supabase/types";
+
+interface ResumeAnalysis {
+  id: string;
+  resume_file_name: string;
+  resume_file_url: string | null;
+  job_role: string;
+  experience_level: string | null;
+  user_email: string | null;
+  ai_feedback_formatting: string | null;
+  ai_feedback_keywords: string | null;
+  ai_feedback_structure: string | null;
+  improvement_suggestions: string | null;
+  structured_feedback: Json | null;
+  overall_score: number | null;
+  status: string;
+  email_sent: boolean | null;
+  email_sent_at: string | null;
+  created_at: string;
+  user_id: string | null;
+}
 
 export const ResumeAnalysesList = () => {
   const { data: analyses, isLoading, error } = useResumeAnalyses();
