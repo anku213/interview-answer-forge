@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, BookOpen, Target, Trophy } from "lucide-react";
+import { Question } from "@/types/Question";
 
 interface QuestionsProps {
   searchTerm?: string;
@@ -17,7 +18,20 @@ const Questions = ({ searchTerm = "" }: QuestionsProps) => {
   const [editingQuestion, setEditingQuestion] = useState<any>(null);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const { user } = useAuth();
-  const { questions, loading, deleteQuestion } = useSupabaseQuestions();
+  const { questions: supabaseQuestions, loading, deleteQuestion } = useSupabaseQuestions();
+
+  // Convert SupabaseQuestion to Question format
+  const questions: Question[] = supabaseQuestions.map(q => ({
+    id: q.id,
+    title: q.title,
+    answer: q.answer,
+    code: q.code,
+    language: q.language,
+    category: q.category,
+    createdAt: q.created_at,
+    updatedAt: q.updated_at,
+    userId: q.user_id
+  }));
 
   // Filter questions based on search term and category
   const filteredQuestions = questions.filter(question => {
