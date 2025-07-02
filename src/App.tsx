@@ -8,7 +8,7 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "./components/AppSidebar";
 import { Header } from "./components/Header";
 import { useState } from "react";
-import Index from "./pages/Index";
+import Dashboard from "./pages/Dashboard";
 import Questions from "./pages/Questions";
 import QuestionDetail from "./pages/QuestionDetail";
 import Auth from "./pages/Auth";
@@ -30,7 +30,6 @@ const App = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   const handleNewQuestion = () => {
-    // This will be handled by the Questions page
     window.location.href = "/questions";
   };
 
@@ -76,7 +75,7 @@ const App = () => {
                 />
                 <main className="flex-1 overflow-auto">
                   <Routes>
-                    <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+                    <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                     <Route path="/questions" element={<ProtectedRoute><Questions searchTerm={searchTerm} /></ProtectedRoute>} />
                     <Route path="/questions/:id" element={<ProtectedRoute><QuestionDetail /></ProtectedRoute>} />
                     <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />

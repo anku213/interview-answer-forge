@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, LogOut, Code, User, Settings } from "lucide-react";
+import { Search, LogOut, Code, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -18,10 +18,6 @@ export const Header = ({ onNewQuestion, searchTerm, onSearchChange }: HeaderProp
 
   const handleSignOut = async () => {
     await signOut();
-  };
-
-  const handleSettingsClick = () => {
-    navigate('/settings');
   };
 
   return (
@@ -57,7 +53,7 @@ export const Header = ({ onNewQuestion, searchTerm, onSearchChange }: HeaderProp
           </div>
         </div>
 
-        {/* Right Section - User Actions */}
+        {/* Right Section - User Profile & Sign Out */}
         <div className="flex items-center space-x-3">
           {user && (
             <div className="hidden md:flex items-center space-x-3 px-3 py-2 bg-gray-50 rounded-xl border border-gray-200">
@@ -69,25 +65,6 @@ export const Header = ({ onNewQuestion, searchTerm, onSearchChange }: HeaderProp
               </span>
             </div>
           )}
-          
-          <Button 
-            onClick={onNewQuestion}
-            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-md hover:shadow-lg transition-all duration-200 rounded-xl px-4 py-2"
-            size="sm"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">New Question</span>
-          </Button>
-
-          <Button 
-            variant="outline" 
-            onClick={handleSettingsClick}
-            className="border-gray-200 hover:bg-gray-50 transition-all duration-200 rounded-xl px-3 py-2"
-            size="sm"
-          >
-            <Settings className="h-4 w-4" />
-            <span className="hidden sm:inline ml-2">Settings</span>
-          </Button>
           
           <Button 
             variant="outline" 

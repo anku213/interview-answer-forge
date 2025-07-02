@@ -82,8 +82,8 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar className="border-r border-gray-200 bg-white">
-      <SidebarHeader className={cn("p-4 border-b border-gray-100", isCollapsed && "px-2")}>
+    <Sidebar className={cn("border-r border-gray-200 bg-white transition-all duration-300", isCollapsed ? "w-16" : "w-60")}>
+      <SidebarHeader className={cn("p-4 border-b border-gray-100", isCollapsed && "px-2 py-4")}>
         {!isCollapsed ? (
           <div className="flex items-center space-x-3">
             <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-2 rounded-xl shadow-lg">
@@ -103,7 +103,7 @@ export function AppSidebar() {
         )}
       </SidebarHeader>
 
-      <SidebarContent className="px-2 py-4">
+      <SidebarContent className={cn("px-2 py-4", isCollapsed && "px-1")}>
         <SidebarGroup>
           {!isCollapsed && (
             <SidebarGroupLabel className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -111,7 +111,7 @@ export function AppSidebar() {
             </SidebarGroupLabel>
           )}
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-1">
+            <SidebarMenu className={cn("space-y-1", isCollapsed && "space-y-2")}>
               {menuItems.map((item) => {
                 const active = isActive(item.url);
                 return (
@@ -121,7 +121,7 @@ export function AppSidebar() {
                       className={cn(
                         "w-full group relative rounded-xl transition-all duration-200 hover:bg-gray-50",
                         active && "bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 border-r-2 border-blue-500",
-                        isCollapsed ? "justify-center p-3" : "justify-start p-3"
+                        isCollapsed ? "justify-center p-3 h-12" : "justify-start p-3"
                       )}
                       tooltip={isCollapsed ? item.title : undefined}
                     >
@@ -172,7 +172,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className={cn("p-4 border-t border-gray-100", isCollapsed && "px-2")}>
+      <SidebarFooter className={cn("p-4 border-t border-gray-100", isCollapsed && "px-2 py-4")}>
         {user && (
           <div className={cn(
             "flex items-center p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200",

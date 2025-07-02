@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useSupabaseQuestions } from "@/hooks/useSupabaseQuestions";
 import { useDailyChallenges } from "@/hooks/useDailyChallenges";
@@ -7,13 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Plus, 
   BookOpen, 
   Code, 
   TrendingUp, 
   Target, 
   Flame, 
-  Lightbulb, 
   MessageSquare, 
   Bookmark, 
   Play, 
@@ -24,7 +23,8 @@ import {
   CheckCircle2,
   Calendar,
   Brain,
-  Users
+  Users,
+  FileText
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -57,17 +57,25 @@ const Dashboard = () => {
     navigate('/daily-challenge');
   };
 
-  // Mock data for demo purposes - in real app, this would come from actual user data
+  const handleNavigateToResumeAnalyzer = () => {
+    navigate('/resume-analyzer');
+  };
+
+  const handleNavigateToCompanyQuestions = () => {
+    navigate('/company-questions');
+  };
+
+  // Calculate dynamic statistics
   const stats = {
     totalQuestions: convertedQuestions.length,
-    questionsSolved: Math.floor(convertedQuestions.length * 0.7), // 70% solved
+    questionsSolved: Math.floor(convertedQuestions.length * 0.7),
     interviewsCompleted: 3,
     bookmarkedItems: Math.floor(convertedQuestions.length * 0.3),
     categories: new Set(convertedQuestions.map(q => q.category)).size,
     languages: new Set(convertedQuestions.map(q => q.language)).size,
-    dailyGoalProgress: 60, // 60% of daily goal completed
-    interviewPrepCompletion: 45, // 45% overall completion
-    aiInterviewParticipation: 75, // 75% AI interview participation
+    dailyGoalProgress: 60,
+    interviewPrepCompletion: 45,
+    aiInterviewParticipation: 75,
     currentStreak: userStats?.current_streak || 0,
   };
 
@@ -78,7 +86,6 @@ const Dashboard = () => {
     { id: 4, action: "Started Python practice session", time: "3 days ago", icon: Play },
   ];
 
-  // Add daily challenge activity if user has submitted
   if (userSubmission) {
     recentActivities.unshift({
       id: 0,
@@ -87,8 +94,6 @@ const Dashboard = () => {
       icon: Calendar
     });
   }
-
-  const motivationalTip = "Consistency beats intensity. Practice a little every day to build your coding skills!";
 
   if (loading || challengeLoading) {
     return (
@@ -109,8 +114,8 @@ const Dashboard = () => {
 
   return (
     <ProtectedRoute>
-      <div className="space-y-8">
-        {/* Enhanced Welcome Header */}
+      <div className="container mx-auto p-6 space-y-8">
+        {/* Welcome Header */}
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 p-8">
           <div className="absolute top-4 right-4 opacity-20">
             <Trophy className="h-24 w-24 text-primary" />
@@ -142,108 +147,86 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Enhanced Statistics Cards */}
+        {/* Statistics Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-blue-50/50 to-white dark:from-blue-950/50 dark:via-blue-950/30 dark:to-background border-blue-200/50 dark:border-blue-800/50 hover:shadow-lg transition-all duration-300 group">
+          <Card className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-blue-50/50 to-white border-blue-200/50 hover:shadow-lg transition-all duration-300 group">
             <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 rounded-full -mr-10 -mt-10"></div>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-sm font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wide">
+              <CardTitle className="text-sm font-semibold text-blue-700 uppercase tracking-wide">
                 Total Questions
               </CardTitle>
               <div className="bg-blue-500/20 p-2 rounded-xl group-hover:scale-110 transition-transform">
-                <BookOpen className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <BookOpen className="h-5 w-5 text-blue-600" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-blue-900 dark:text-blue-100 mb-1">
+              <div className="text-3xl font-bold text-blue-900 mb-1">
                 {stats.totalQuestions}
               </div>
-              <p className="text-sm text-blue-600 dark:text-blue-400 flex items-center">
+              <p className="text-sm text-blue-600 flex items-center">
                 <TrendingUp className="h-3 w-3 mr-1" />
                 In your collection
               </p>
             </CardContent>
           </Card>
 
-          <Card className="relative overflow-hidden bg-gradient-to-br from-green-50 via-green-50/50 to-white dark:from-green-950/50 dark:via-green-950/30 dark:to-background border-green-200/50 dark:border-green-800/50 hover:shadow-lg transition-all duration-300 group">
+          <Card className="relative overflow-hidden bg-gradient-to-br from-green-50 via-green-50/50 to-white border-green-200/50 hover:shadow-lg transition-all duration-300 group">
             <div className="absolute top-0 right-0 w-20 h-20 bg-green-500/10 rounded-full -mr-10 -mt-10"></div>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-sm font-semibold text-green-700 dark:text-green-300 uppercase tracking-wide">
+              <CardTitle className="text-sm font-semibold text-green-700 uppercase tracking-wide">
                 Questions Solved
               </CardTitle>
               <div className="bg-green-500/20 p-2 rounded-xl group-hover:scale-110 transition-transform">
-                <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                <CheckCircle2 className="h-5 w-5 text-green-600" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-green-900 dark:text-green-100 mb-1">
+              <div className="text-3xl font-bold text-green-900 mb-1">
                 {stats.questionsSolved}
               </div>
-              <p className="text-sm text-green-600 dark:text-green-400 flex items-center">
+              <p className="text-sm text-green-600 flex items-center">
                 <Target className="h-3 w-3 mr-1" />
                 Successfully completed
               </p>
             </CardContent>
           </Card>
 
-          <Card className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-purple-50/50 to-white dark:from-purple-950/50 dark:via-purple-950/30 dark:to-background border-purple-200/50 dark:border-purple-800/50 hover:shadow-lg transition-all duration-300 group">
+          <Card className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-purple-50/50 to-white border-purple-200/50 hover:shadow-lg transition-all duration-300 group">
             <div className="absolute top-0 right-0 w-20 h-20 bg-purple-500/10 rounded-full -mr-10 -mt-10"></div>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-sm font-semibold text-purple-700 dark:text-purple-300 uppercase tracking-wide">
+              <CardTitle className="text-sm font-semibold text-purple-700 uppercase tracking-wide">
                 AI Interviews
               </CardTitle>
               <div className="bg-purple-500/20 p-2 rounded-xl group-hover:scale-110 transition-transform">
-                <Brain className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                <Brain className="h-5 w-5 text-purple-600" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-purple-900 dark:text-purple-100 mb-1">
+              <div className="text-3xl font-bold text-purple-900 mb-1">
                 {stats.interviewsCompleted}
               </div>
-              <p className="text-sm text-purple-600 dark:text-purple-400 flex items-center">
+              <p className="text-sm text-purple-600 flex items-center">
                 <MessageSquare className="h-3 w-3 mr-1" />
                 Completed sessions
               </p>
             </CardContent>
           </Card>
 
-          <Card className="relative overflow-hidden bg-gradient-to-br from-orange-50 via-orange-50/50 to-white dark:from-orange-950/50 dark:via-orange-950/30 dark:to-background border-orange-200/50 dark:border-orange-800/50 hover:shadow-lg transition-all duration-300 group">
-            <div className="absolute top-0 right-0 w-20 h-20 bg-orange-500/10 rounded-full -mr-10 -mt-10"></div>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-sm font-semibold text-orange-700 dark:text-orange-300 uppercase tracking-wide">
-                Bookmarked
-              </CardTitle>
-              <div className="bg-orange-500/20 p-2 rounded-xl group-hover:scale-110 transition-transform">
-                <Star className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-orange-900 dark:text-orange-100 mb-1">
-                {stats.bookmarkedItems}
-              </div>
-              <p className="text-sm text-orange-600 dark:text-orange-400 flex items-center">
-                <Bookmark className="h-3 w-3 mr-1" />
-                Saved for later
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* New Daily Challenge Card */}
-          <Card className="relative overflow-hidden bg-gradient-to-br from-yellow-50 via-yellow-50/50 to-white dark:from-yellow-950/50 dark:via-yellow-950/30 dark:to-background border-yellow-200/50 dark:border-yellow-800/50 hover:shadow-lg transition-all duration-300 group">
+          <Card className="relative overflow-hidden bg-gradient-to-br from-yellow-50 via-yellow-50/50 to-white border-yellow-200/50 hover:shadow-lg transition-all duration-300 group">
             <div className="absolute top-0 right-0 w-20 h-20 bg-yellow-500/10 rounded-full -mr-10 -mt-10"></div>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-sm font-semibold text-yellow-700 dark:text-yellow-300 uppercase tracking-wide">
+              <CardTitle className="text-sm font-semibold text-yellow-700 uppercase tracking-wide">
                 Daily Challenge
               </CardTitle>
               <div className="bg-yellow-500/20 p-2 rounded-xl group-hover:scale-110 transition-transform">
-                <Calendar className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                <Calendar className="h-5 w-5 text-yellow-600" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-yellow-900 dark:text-yellow-100 mb-1">
+              <div className="text-3xl font-bold text-yellow-900 mb-1">
                 {userStats?.current_streak || 0}
               </div>
-              <p className="text-sm text-yellow-600 dark:text-yellow-400 flex items-center">
+              <p className="text-sm text-yellow-600 flex items-center">
                 <Flame className="h-3 w-3 mr-1" />
                 Day streak
               </p>
@@ -263,7 +246,7 @@ const Dashboard = () => {
 
         {/* Daily Challenge Section */}
         {todayChallenge && (
-          <Card className="bg-gradient-to-br from-blue-50 via-blue-50/30 to-white dark:from-blue-950/20 dark:via-blue-950/10 dark:to-background border-blue-200/50 dark:border-blue-800/30">
+          <Card className="bg-gradient-to-br from-blue-50 via-blue-50/30 to-white border-blue-200/50">
             <CardHeader>
               <CardTitle className="text-2xl flex items-center">
                 <div className="bg-blue-500/20 p-2 rounded-xl mr-3">
@@ -320,82 +303,7 @@ const Dashboard = () => {
           </Card>
         )}
 
-        {/* Enhanced Progress Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="bg-gradient-to-br from-background to-muted/20 border-2 border-border/50 hover:border-primary/30 transition-all duration-300">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-xl flex items-center">
-                <div className="bg-primary/10 p-2 rounded-lg mr-3">
-                  <TrendingUp className="h-5 w-5 text-primary" />
-                </div>
-                Interview Prep Completion
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-muted-foreground">Overall Progress</span>
-                <Badge variant="secondary" className="font-semibold">
-                  {stats.interviewPrepCompletion}%
-                </Badge>
-              </div>
-              <Progress value={stats.interviewPrepCompletion} className="h-3 bg-muted" />
-              <p className="text-sm text-muted-foreground flex items-center">
-                <Zap className="h-3 w-3 mr-1 text-yellow-500" />
-                Keep going! You're making great progress.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-background to-muted/20 border-2 border-border/50 hover:border-primary/30 transition-all duration-300">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-xl flex items-center">
-                <div className="bg-blue-500/10 p-2 rounded-lg mr-3">
-                  <Calendar className="h-5 w-5 text-blue-600" />
-                </div>
-                Daily Goal
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-muted-foreground">Today's Target</span>
-                <Badge variant="secondary" className="font-semibold">
-                  {stats.dailyGoalProgress}%
-                </Badge>
-              </div>
-              <Progress value={stats.dailyGoalProgress} className="h-3 bg-muted" />
-              <p className="text-sm text-muted-foreground flex items-center">
-                <Zap className="h-3 w-3 mr-1 text-yellow-500" />
-                {100 - stats.dailyGoalProgress === 100 ? "Start your daily goal!" : `${Math.ceil((100 - stats.dailyGoalProgress) / (100 / (convertedQuestions.length > 0 ? convertedQuestions.length : 1)))} more questions to reach today's goal!`}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-background to-muted/20 border-2 border-border/50 hover:border-primary/30 transition-all duration-300">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-xl flex items-center">
-                <div className="bg-purple-500/10 p-2 rounded-lg mr-3">
-                  <Brain className="h-5 w-5 text-purple-600" />
-                </div>
-                AI Interview Progress
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-muted-foreground">Participation Rate</span>
-                <Badge variant="secondary" className="font-semibold">
-                  {stats.aiInterviewParticipation}%
-                </Badge>
-              </div>
-              <Progress value={stats.aiInterviewParticipation} className="h-3 bg-muted" />
-              <p className="text-sm text-muted-foreground flex items-center">
-                <Zap className="h-3 w-3 mr-1 text-yellow-500" />
-                Excellent AI interview engagement!
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Enhanced Quick Actions and Activity */}
+        {/* Quick Actions and Recent Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="bg-gradient-to-br from-primary/5 to-primary/2 border-primary/20">
             <CardHeader>
@@ -445,12 +353,23 @@ const Dashboard = () => {
                 Practice Questions
               </Button>
               <Button 
-                onClick={() => navigate('/company-questions')} 
+                onClick={handleNavigateToResumeAnalyzer} 
                 variant="outline" 
                 className="w-full justify-start border-2 hover:bg-muted/50 hover:border-primary/50 transition-all duration-300" 
                 size="lg"
               >
-                <div className="bg-purple/10 p-1 rounded mr-3">
+                <div className="bg-green-500/10 p-1 rounded mr-3">
+                  <FileText className="h-4 w-4 text-green-600" />
+                </div>
+                Analyze Resume
+              </Button>
+              <Button 
+                onClick={handleNavigateToCompanyQuestions} 
+                variant="outline" 
+                className="w-full justify-start border-2 hover:bg-muted/50 hover:border-primary/50 transition-all duration-300" 
+                size="lg"
+              >
+                <div className="bg-purple-500/10 p-1 rounded mr-3">
                   <Users className="h-4 w-4 text-purple-600" />
                 </div>
                 Company Questions
@@ -458,7 +377,6 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Enhanced Recent Activity */}
           <Card className="bg-gradient-to-br from-background to-muted/10">
             <CardHeader>
               <CardTitle className="text-2xl flex items-center">
@@ -487,52 +405,6 @@ const Dashboard = () => {
                     </Badge>
                   </div>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Streak Counter and Motivational Tip */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="bg-gradient-to-r from-orange-500/10 to-red-500/10 border-orange-200 dark:border-orange-800">
-            <CardHeader>
-              <CardTitle className="text-xl flex items-center">
-                <Flame className="h-5 w-5 text-orange-500 mr-2" />
-                Daily Challenge Streak
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-orange-600 dark:text-orange-400 mb-2">
-                  {stats.currentStreak}
-                </div>
-                <p className="text-lg font-medium text-orange-700 dark:text-orange-300">Days</p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  {stats.currentStreak > 0 ? "Keep it up! You're on fire! 🔥" : "Start your streak today!"}
-                </p>
-                {userStats && (
-                  <div className="mt-3 text-xs text-muted-foreground">
-                    <p>Longest streak: {userStats.longest_streak} days</p>
-                    <p>Total completed: {userStats.total_completed}</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-200 dark:border-blue-800">
-            <CardHeader>
-              <CardTitle className="text-xl flex items-center">
-                <Lightbulb className="h-5 w-5 text-yellow-500 mr-2" />
-                Tip of the Day
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground italic">"{motivationalTip}"</p>
-              <div className="mt-3 flex justify-end">
-                <Button variant="ghost" size="sm" className="text-xs">
-                  Get Another Tip
-                </Button>
               </div>
             </CardContent>
           </Card>
@@ -583,7 +455,7 @@ const Dashboard = () => {
                 Create your first question to begin building your interview preparation collection and track your progress.
               </p>
               <Button onClick={handleNavigateToQuestions} size="lg">
-                <Plus className="h-4 w-4 mr-2" />
+                <BookOpen className="h-4 w-4 mr-2" />
                 Create Your First Question
               </Button>
             </CardContent>
