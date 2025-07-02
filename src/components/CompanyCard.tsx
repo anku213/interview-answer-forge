@@ -1,81 +1,137 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building2, ArrowRight, TrendingUp, Star } from "lucide-react";
-import { Company } from "@/hooks/useCompanies";
+import { Building2, Target, TrendingUp, Star } from "lucide-react";
+
+interface Company {
+  id: string;
+  name: string;
+  logo_url?: string;
+  description?: string;
+  industry?: string;
+  founded_year?: number;
+  headquarters?: string;
+  created_at: string;
+  updated_at: string;
+}
 
 interface CompanyCardProps {
   company: Company;
-  questionCount?: number;
+  questionCount: number;
   onClick: () => void;
 }
 
-export const CompanyCard = ({ company, questionCount = 0, onClick }: CompanyCardProps) => {
+export const CompanyCard = ({ company, questionCount, onClick }: CompanyCardProps) => {
+  const getDifficultyStats = () => {
+    // Mock difficulty breakdown - in real app, this would come from props
+    return {
+      easy: Math.floor(questionCount * 0.3),
+      medium: Math.floor(questionCount * 0.5),
+      hard: Math.floor(questionCount * 0.2)
+    };
+  };
+
+  const difficultyStats = getDifficultyStats();
+
   return (
     <Card 
-      className="cursor-pointer hover:shadow-xl transition-all duration-300 group bg-gradient-to-br from-background via-background to-muted/10 border-2 border-border/50 hover:border-primary/30 hover:-translate-y-1"
+      className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-white to-gray-50 hover:from-blue-50 hover:to-purple-50 overflow-hidden"
       onClick={onClick}
     >
       <CardHeader className="pb-4">
-        <div className="flex items-center space-x-4">
-          {company.logo_url ? (
-            <div className="relative">
-              <img 
-                src={company.logo_url} 
-                alt={`${company.name} logo`}
-                className="w-14 h-14 object-contain rounded-xl bg-gradient-to-br from-muted/30 to-muted/10 p-3 border border-border/30 group-hover:border-primary/30 transition-all duration-300"
-              />
-              <div className="absolute -top-1 -right-1 bg-primary/20 rounded-full p-1">
-                <Star className="h-3 w-3 text-primary" />
-              </div>
+        <div className="flex items-start justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+              {company.logo_url ? (
+                <img 
+                  src={company.logo_url} 
+                  alt={`${company.name} logo`}
+                  className="w-10 h-10 rounded-lg object-cover"
+                />
+              ) : (
+                <Building2 className="h-8 w-8 text-white" />
+              )}
             </div>
-          ) : (
-            <div className="w-14 h-14 bg-gradient-to-br from-primary/20 to-primary/10 rounded-xl flex items-center justify-center border border-primary/30 group-hover:scale-110 transition-transform duration-300">
-              <Building2 className="h-7 w-7 text-primary" />
+            <div className="flex-1 min-w-0">
+              <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                {company.name}
+              </CardTitle>
+              {company.industry && (
+                <p className="text-sm text-gray-600 mt-1">{company.industry}</p>
+              )}
+              {company.headquarters && (
+                <p className="text-xs text-gray-500 mt-1">📍 {company.headquarters}</p>
+              )}
             </div>
-          )}
-          <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg font-bold group-hover:text-primary transition-colors truncate">
-              {company.name}
-            </CardTitle>
-            <p className="text-sm text-muted-foreground flex items-center mt-1">
-              <TrendingUp className="h-3 w-3 mr-1" />
-              {questionCount} questions available
-            </p>
+          </div>
+          <div className="text-right">
+            <div className="flex items-center gap-1">
+              <Star className="h-4 w-4 text-yellow-500 fill-current" />
+              <span className="text-sm font-medium text-gray-700">Premium</span>
+            </div>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-0">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <Badge 
-              variant="secondary" 
-              className="text-xs bg-primary/10 text-primary border-primary/20"
-            >
-              <Building2 className="h-3 w-3 mr-1" />
-              Company
-            </Badge>
-            {questionCount > 10 && (
-              <Badge 
-                variant="outline" 
-                className="text-xs border-green-300 text-green-700 dark:border-green-700 dark:text-green-300"
-              >
-                Popular
-              </Badge>
-            )}
+      
+      <CardContent className="space-y-4">
+        {/* Question Count */}
+        <div className="flex items-center justify-between p-4 bg-white/50 rounded-xl border border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-100 p-2 rounded-lg">
+              <Target className="h-5 w-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-900">{questionCount}</p>
+              <p className="text-sm text-gray-600">Questions</p>
+            </div>
           </div>
-          <div className="flex items-center text-primary group-hover:text-primary/80 transition-colors">
-            <span className="text-xs font-medium mr-1">Explore</span>
-            <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform duration-300" />
+          <TrendingUp className="h-5 w-5 text-green-500" />
+        </div>
+
+        {/* Difficulty Breakdown */}
+        <div className="space-y-3">
+          <p className="text-sm font-medium text-gray-700">Difficulty Breakdown</p>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="text-center p-2 bg-green-50 rounded-lg">
+              <div className="text-lg font-bold text-green-700">{difficultyStats.easy}</div>
+              <div className="text-xs text-green-600">Easy</div>
+            </div>
+            <div className="text-center p-2 bg-yellow-50 rounded-lg">
+              <div className="text-lg font-bold text-yellow-700">{difficultyStats.medium}</div>
+              <div className="text-xs text-yellow-600">Medium</div>
+            </div>
+            <div className="text-center p-2 bg-red-50 rounded-lg">
+              <div className="text-lg font-bold text-red-700">{difficultyStats.hard}</div>
+              <div className="text-xs text-red-600">Hard</div>
+            </div>
           </div>
         </div>
-        
-        {/* Progress indicator */}
-        <div className="mt-4 bg-muted/30 rounded-full h-2 overflow-hidden">
-          <div 
-            className="bg-gradient-to-r from-primary/60 to-primary h-full rounded-full transition-all duration-500 group-hover:from-primary group-hover:to-primary/80"
-            style={{ width: `${Math.min((questionCount / 20) * 100, 100)}%` }}
-          ></div>
+
+        {/* Tags */}
+        <div className="flex flex-wrap gap-2">
+          {company.founded_year && (
+            <Badge variant="outline" className="text-xs">
+              Est. {company.founded_year}
+            </Badge>
+          )}
+          <Badge variant="outline" className="text-xs">
+            Tech
+          </Badge>
+          <Badge variant="outline" className="text-xs">
+            Popular
+          </Badge>
+        </div>
+
+        {/* CTA */}
+        <div className="pt-2 border-t border-gray-100">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-500">Start practicing →</span>
+            <div className="flex -space-x-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="w-6 h-6 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full border-2 border-white"></div>
+              ))}
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>

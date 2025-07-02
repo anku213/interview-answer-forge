@@ -3,25 +3,24 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   ArrowLeft, 
-  Send, 
   Bot, 
-  User, 
   MessageSquare,
   Clock,
   Code,
-  CheckCircle
+  CheckCircle,
+  User,
+  Zap
 } from "lucide-react";
 import { useAIInterview, useAIInterviews } from "@/hooks/useAIInterviews";
 import { useGeminiAI } from "@/hooks/useGeminiAI";
 import { useInterviewContext } from "@/hooks/useInterviewContext";
 import { buildInterviewPrompt, extractQuestionFromResponse } from "@/utils/interviewPromptBuilder";
 import { filterAIResponse, formatInterviewResponse } from "@/utils/aiResponseFilter";
+import { ChatInterface } from "@/components/ChatInterface";
 
 const InterviewPanel = () => {
   const { interviewId } = useParams<{ interviewId: string }>();
@@ -29,9 +28,7 @@ const InterviewPanel = () => {
   const { interview, messages, loading, addMessage, isAddingMessage } = useAIInterview(interviewId!);
   const { updateInterview } = useAIInterviews();
   const { generateResponse, isLoading: isAILoading } = useGeminiAI();
-  const [message, setMessage] = useState("");
   const [isInterviewStarted, setIsInterviewStarted] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const {
     context,
@@ -41,14 +38,6 @@ const InterviewPanel = () => {
     addToHistory,
     isQuestionAlreadyAsked,
   } = useInterviewContext();
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
 
   useEffect(() => {
     if (messages.length > 0) {
@@ -118,11 +107,8 @@ const InterviewPanel = () => {
     }
   };
 
-  const handleSendMessage = async () => {
-    if (!message.trim() || !interview) return;
-
-    const userMessage = message.trim();
-    setMessage("");
+  const handleSendMessage = async (userMessage: string) => {
+    if (!interview) return;
 
     try {
       // Add user message and analyze it
@@ -167,13 +153,6 @@ const InterviewPanel = () => {
     navigate('/ai-interview');
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
   if (loading) {
     return (
       <ProtectedRoute>
@@ -203,173 +182,156 @@ const InterviewPanel = () => {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'Easy': return 'bg-green-100 text-green-800';
-      case 'Intermediate': return 'bg-yellow-100 text-yellow-800';
-      case 'Hard': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'Easy': return 'bg-green-100 text-green-800 border-green-200';
+      case 'Intermediate': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'Hard': return 'bg-red-100 text-red-800 border-red-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'draft': return 'bg-gray-100 text-gray-800';
-      case 'active': return 'bg-blue-100 text-blue-800';
-      case 'completed': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'draft': return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'active': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'completed': return 'bg-green-100 text-green-800 border-green-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
   return (
     <ProtectedRoute>
-      <div className="h-full flex flex-col">
-        {/* Header */}
-        <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40 p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" onClick={() => navigate('/ai-interview')}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back
-              </Button>
-              
-              <div>
-                <h1 className="text-xl font-semibold">{interview.title}</h1>
-                <div className="flex items-center space-x-2 mt-1">
-                  <Badge variant="outline">
-                    <Code className="h-3 w-3 mr-1" />
-                    {interview.technology}
-                  </Badge>
-                  <Badge className={getDifficultyColor(interview.difficulty_level)}>
-                    {interview.difficulty_level}
-                  </Badge>
-                  <Badge className={getStatusColor(interview.status)}>
-                    {interview.status}
-                  </Badge>
-                  {context.interviewPhase && (
-                    <Badge variant="secondary">
-                      Phase: {context.interviewPhase}
-                    </Badge>
-                  )}
+      <div className="h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white">
+        {/* Enhanced Header */}
+        <div className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-40">
+          <div className="container mx-auto px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <Button 
+                  variant="ghost" 
+                  onClick={() => navigate('/ai-interview')}
+                  className="hover:bg-gray-100"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Interviews
+                </Button>
+                
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                    <MessageSquare className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-bold text-gray-900">{interview.title}</h1>
+                    <div className="flex items-center space-x-3 mt-1">
+                      <Badge variant="outline" className="border">
+                        <Code className="h-3 w-3 mr-1" />
+                        {interview.technology}
+                      </Badge>
+                      <Badge className={`border ${getDifficultyColor(interview.difficulty_level)}`}>
+                        {interview.difficulty_level}
+                      </Badge>
+                      <Badge className={`border ${getStatusColor(interview.status)}`}>
+                        {interview.status}
+                      </Badge>
+                      {context.interviewPhase && (
+                        <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+                          <Zap className="h-3 w-3 mr-1" />
+                          Phase: {context.interviewPhase}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="flex items-center space-x-2">
-              {interview.status === 'active' && (
-                <Button onClick={handleCompleteInterview} variant="outline">
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Complete Interview
-                </Button>
-              )}
+              <div className="flex items-center space-x-3">
+                {interview.status === 'active' && (
+                  <Button 
+                    onClick={handleCompleteInterview} 
+                    variant="outline"
+                    className="border-green-200 hover:bg-green-50 hover:text-green-700"
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Complete Interview
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Interview Content */}
-        <div className="flex-1 flex flex-col max-h-[calc(100vh-120px)]">
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col">
           {!isInterviewStarted ? (
-            // Pre-interview state
+            // Enhanced Pre-interview state
             <div className="flex-1 flex items-center justify-center p-8">
-              <Card className="max-w-md w-full">
-                <CardHeader className="text-center">
-                  <CardTitle className="flex items-center justify-center space-x-2">
-                    <MessageSquare className="h-6 w-6" />
-                    <span>Ready to Start?</span>
+              <Card className="max-w-2xl w-full shadow-xl border-0 bg-gradient-to-br from-white to-gray-50">
+                <CardHeader className="text-center pb-6">
+                  <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Bot className="h-10 w-10 text-white" />
+                  </div>
+                  <CardTitle className="text-3xl font-bold text-gray-900 mb-2">
+                    Ready to Begin Your Interview?
                   </CardTitle>
+                  <p className="text-lg text-gray-600">
+                    Your AI interviewer is ready to conduct a personalized technical interview session.
+                  </p>
                 </CardHeader>
-                <CardContent className="space-y-4 text-center">
-                  <div className="space-y-2 text-sm text-muted-foreground">
-                    <p><strong>Position:</strong> {interview.experience_level}</p>
-                    <p><strong>Technology:</strong> {interview.technology}</p>
-                    <p><strong>Difficulty:</strong> {interview.difficulty_level}</p>
+                <CardContent className="space-y-6">
+                  {/* Interview Details */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-blue-50 rounded-xl p-4 text-center">
+                      <User className="h-6 w-6 text-blue-600 mx-auto mb-2" />
+                      <p className="font-semibold text-blue-800">{interview.experience_level}</p>
+                      <p className="text-sm text-blue-600">Experience Level</p>
+                    </div>
+                    <div className="bg-purple-50 rounded-xl p-4 text-center">
+                      <Code className="h-6 w-6 text-purple-600 mx-auto mb-2" />
+                      <p className="font-semibold text-purple-800">{interview.technology}</p>
+                      <p className="text-sm text-purple-600">Technology Focus</p>
+                    </div>
                   </div>
                   
-                  <p className="text-sm text-muted-foreground">
-                    This AI interview will follow a structured flow with personalized questions based on your responses. 
-                    The AI will track context and avoid repeating questions for a natural interview experience.
-                  </p>
+                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-200">
+                    <h3 className="font-semibold text-gray-900 mb-3">What to Expect:</h3>
+                    <ul className="space-y-2 text-sm text-gray-700">
+                      <li className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        Personalized questions based on your experience level
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                        Real-time feedback and follow-up questions
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        Contextual conversation that adapts to your responses
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                        Comprehensive evaluation at the end
+                      </li>
+                    </ul>
+                  </div>
                   
-                  <Button onClick={handleStartInterview} className="w-full">
-                    <Bot className="h-4 w-4 mr-2" />
-                    Start Interview
+                  <Button 
+                    onClick={handleStartInterview} 
+                    className="w-full py-4 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg"
+                    size="lg"
+                  >
+                    <Bot className="h-5 w-5 mr-2" />
+                    Start Interview Session
                   </Button>
                 </CardContent>
               </Card>
             </div>
           ) : (
-            // Chat interface
-            <>
-              {/* Messages */}
-              <ScrollArea className="flex-1 p-4">
-                <div className="space-y-4 max-w-4xl mx-auto">
-                  {messages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div
-                        className={`max-w-[80%] rounded-lg p-4 ${
-                          msg.role === 'user'
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted'
-                        }`}
-                      >
-                        <div className="flex items-start space-x-2">
-                          {msg.role === 'assistant' && (
-                            <Bot className="h-5 w-5 mt-0.5 flex-shrink-0" />
-                          )}
-                          {msg.role === 'user' && (
-                            <User className="h-5 w-5 mt-0.5 flex-shrink-0" />
-                          )}
-                          <div className="flex-1">
-                            <p className="whitespace-pre-wrap">{msg.content}</p>
-                            <p className="text-xs opacity-70 mt-2">
-                              {new Date(msg.created_at).toLocaleTimeString()}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  
-                  {(isAddingMessage || isAILoading) && (
-                    <div className="flex justify-start">
-                      <div className="bg-muted rounded-lg p-4 max-w-[80%]">
-                        <div className="flex items-center space-x-2">
-                          <Bot className="h-5 w-5" />
-                          <div className="flex space-x-1">
-                            <div className="w-2 h-2 bg-current rounded-full animate-bounce"></div>
-                            <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                            <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div ref={messagesEndRef} />
-                </div>
-              </ScrollArea>
-
-              {/* Message Input */}
-              <div className="border-t p-4">
-                <div className="max-w-4xl mx-auto flex space-x-2">
-                  <Input
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Type your response..."
-                    disabled={isAddingMessage || isAILoading}
-                    className="flex-1"
-                  />
-                  <Button 
-                    onClick={handleSendMessage}
-                    disabled={!message.trim() || isAddingMessage || isAILoading}
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </>
+            // Enhanced Chat interface
+            <ChatInterface
+              messages={messages}
+              onSendMessage={handleSendMessage}
+              isLoading={isAddingMessage || isAILoading}
+              disabled={interview.status === 'completed'}
+            />
           )}
         </div>
       </div>
