@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { QuestionCard } from "./QuestionCard";
+import { RegularQuestionCard } from "./RegularQuestionCard";
 import { QuestionFilters } from "./QuestionFilters";
 import { Question } from "@/types/Question";
 import { Grid, List, LayoutGrid } from "lucide-react";
@@ -119,7 +119,7 @@ export const QuestionList = ({
             : "space-y-4"
         }>
           {filteredQuestions.map((question) => (
-            <QuestionCard
+            <RegularQuestionCard
               key={question.id}
               question={question}
               onEdit={onEdit}
