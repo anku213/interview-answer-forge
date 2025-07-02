@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { QuestionList } from "@/components/QuestionList";
 import { QuestionEditor } from "@/components/QuestionEditor";
@@ -14,15 +15,25 @@ interface QuestionsProps {
 const Questions = ({ searchTerm = "" }: QuestionsProps) => {
   const [showEditor, setShowEditor] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<any>(null);
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const { user } = useAuth();
-  const { data: questions = [], isLoading, refetch } = useSupabaseQuestions();
+  const { questions, loading, deleteQuestion } = useSupabaseQuestions();
 
-  // Filter questions based on search term
-  const filteredQuestions = questions.filter(question => 
-    question.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    question.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    question.answer.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter questions based on search term and category
+  const filteredQuestions = questions.filter(question => {
+    const matchesSearch = question.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      question.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      question.answer.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesCategory = selectedCategory === "all" || question.category === selectedCategory;
+    
+    return matchesSearch && matchesCategory;
+  });
+
+  const handleRefetch = () => {
+    // Since useSupabaseQuestions automatically refetches, we don't need to do anything here
+    // The component will re-render when questions change
+  };
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -112,7 +123,7 @@ const Questions = ({ searchTerm = "" }: QuestionsProps) => {
             <QuestionEditor
               question={editingQuestion}
               onSave={(question) => {
-                refetch();
+                handleRefetch();
                 setShowEditor(false);
                 setEditingQuestion(null);
               }}
@@ -137,7 +148,7 @@ const Questions = ({ searchTerm = "" }: QuestionsProps) => {
             </div>
           </CardHeader>
           <CardContent className="p-6">
-            {isLoading ? (
+            {loading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
                 <span className="ml-3 text-gray-600">Loading questions...</span>
@@ -149,7 +160,10 @@ const Questions = ({ searchTerm = "" }: QuestionsProps) => {
                   setEditingQuestion(question);
                   setShowEditor(true);
                 }}
-                onRefetch={refetch}
+                onDelete={deleteQuestion}
+                searchTerm={searchTerm}
+                selectedCategory={selectedCategory}
+                onCategoryChange={setSelectedCategory}
               />
             )}
           </CardContent>
