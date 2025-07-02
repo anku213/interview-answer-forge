@@ -7,6 +7,7 @@ import { ArrowLeft, FileText, Download, CheckCircle2, AlertTriangle, XCircle, St
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import type { Json } from "@/integrations/supabase/types";
 
 interface StructuredFeedback {
   feedback?: {
@@ -30,7 +31,7 @@ interface ResumeAnalysis {
   ai_feedback_keywords: string | null;
   ai_feedback_structure: string | null;
   improvement_suggestions: string | null;
-  structured_feedback: StructuredFeedback | null;
+  structured_feedback: Json | null;
   overall_score: number | null;
   status: string;
   email_sent: boolean | null;
@@ -131,7 +132,7 @@ export const ResumeAnalysisDetail: React.FC<ResumeAnalysisDetailProps> = ({
   const ScoreIcon = scoreConfig.icon;
 
   // Use structured feedback if available, otherwise fall back to legacy format
-  const structuredFeedback = analysis.structured_feedback;
+  const structuredFeedback = analysis.structured_feedback as StructuredFeedback | null;
   const hasStructuredFeedback = structuredFeedback && structuredFeedback.feedback;
 
   return (
