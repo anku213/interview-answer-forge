@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -10,6 +11,7 @@ import { useUserApiKeys } from "@/hooks/useUserApiKeys";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { CronJobManager } from "@/components/CronJobManager";
+import { useManualQuestionGeneration } from "@/hooks/useManualQuestionGeneration";
 import { 
   Key, 
   Eye, 
@@ -36,7 +38,8 @@ import {
   Moon,
   Sun,
   Zap,
-  Clock
+  Clock,
+  Play
 } from "lucide-react";
 import { useDailyCron } from "@/hooks/useDailyCron";
 
@@ -44,6 +47,7 @@ const Settings = () => {
   const { apiKeys, loading, saveGeminiApiKey, deleteGeminiApiKey } = useUserApiKeys();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { generateQuestions, loading: generatingQuestions } = useManualQuestionGeneration();
   
   // Form states
   const [geminiApiKey, setGeminiApiKey] = useState("");
@@ -51,6 +55,10 @@ const Settings = () => {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [testingCron, setTestingCron] = useState(false);
+  
+  // Manual generation form states
+  const [questionCount, setQuestionCount] = useState(5);
+  const [questionDifficulty, setQuestionDifficulty] = useState<'Easy' | 'Medium' | 'Hard'>('Medium');
   
   // Profile states
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -99,6 +107,22 @@ const Settings = () => {
     setDeleting(true);
     await deleteGeminiApiKey();
     setDeleting(false);
+  };
+
+  const handleManualQuestionGeneration = async () => {
+    if (!apiKeys?.gemini_api_key) {
+      toast({
+        title: "API Key Required",
+        description: "Please configure your Gemini API key first",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    await generateQuestions({
+      count: questionCount,
+      difficulty: questionDifficulty
+    });
   };
 
   const handleUpdateProfile = async () => {
@@ -574,6 +598,126 @@ const Settings = () => {
                       <p className="text-sm text-gray-500">
                         Your API key will be encrypted and stored securely
                       </p>
+                    </div>
+                  )}
+                </div>
+
+                <Separator />
+
+                {/* Manual Question Generation */}
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-800">Manual Question Generation</h3>
+                      <p className="text-gray-600">Generate company interview questions instantly with AI</p>
+                    </div>
+                  </div>
+
+                  {apiKeys?.gemini_api_key ? (
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6">
+                      <div className="space-y-6">
+                        <div className="flex items-start space-x-4">
+                          <div className="bg-green-100 p-3 rounded-lg">
+                            <Zap className="h-6 w-6 text-green-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-green-900 mb-2">
+                              Generate Questions Instantly
+                            </h4>
+                            <p className="text-green-700 mb-4">
+                              Use AI to generate new interview questions for top tech companies. 
+                              Customize the number of questions and difficulty level.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <Label className="text-sm font-medium text-gray-700 mb-2 block">Number of Questions</Label>
+                            <Select value={questionCount.toString()} onValueChange={(value) => setQuestionCount(parseInt(value))}>
+                              <SelectTrigger className="h-10 border-green-200 focus:border-green-500">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="3">3 Questions</SelectItem>
+                                <SelectItem value="5">5 Questions</SelectItem>
+                                <SelectItem value="10">10 Questions</SelectItem>
+                                <SelectItem value="15">15 Questions</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div>
+                            <Label className="text-sm font-medium text-gray-700 mb-2 block">Difficulty Level</Label>
+                            <Select value={questionDifficulty} onValueChange={(value: 'Easy' | 'Medium' | 'Hard') => setQuestionDifficulty(value)}>
+                              <SelectTrigger className="h-10 border-green-200 focus:border-green-500">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Easy">Easy</SelectItem>
+                                <SelectItem value="Medium">Medium</SelectItem>
+                                <SelectItem value="Hard">Hard</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="flex items-end">
+                            <Button
+                              onClick={handleManualQuestionGeneration}
+                              disabled={generatingQuestions}
+                              className="w-full h-10 bg-green-600 hover:bg-green-700 text-white"
+                            >
+                              {generatingQuestions ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                                  Generating...
+                                </>
+                              ) : (
+                                <>
+                                  <Play className="h-4 w-4 mr-2" />
+                                  Generate Now
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div className="flex items-center text-green-600">
+                            <Check className="h-4 w-4 mr-2" />
+                            Instant generation
+                          </div>
+                          <div className="flex items-center text-green-600">
+                            <Check className="h-4 w-4 mr-2" />
+                            Multiple difficulty levels
+                          </div>
+                          <div className="flex items-center text-green-600">
+                            <Check className="h-4 w-4 mr-2" />
+                            AI-powered hints
+                          </div>
+                          <div className="flex items-center text-green-600">
+                            <Check className="h-4 w-4 mr-2" />
+                            Auto-saved to database
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
+                      <div className="flex items-start space-x-4">
+                        <div className="bg-gray-200 p-3 rounded-lg">
+                          <AlertTriangle className="h-6 w-6 text-gray-500" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-gray-800 mb-2">
+                            Gemini API Key Required
+                          </h4>
+                          <p className="text-gray-600">
+                            To enable manual question generation, please add your Gemini API key above. 
+                            This will allow you to generate interview questions instantly.
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
