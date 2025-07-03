@@ -82,6 +82,7 @@ const App = () => {
                     <Route path="/daily-challenge" element={<ProtectedRoute><DailyChallenge /></ProtectedRoute>} />
                     <Route path="/company-questions" element={<ProtectedRoute><CompanyQuestions /></ProtectedRoute>} />
                     <Route path="/company-questions/:companyId" element={<ProtectedRoute><CompanyQuestionsList /></ProtectedRoute>} />
+                    <Route path="/company-questions/:companyId/:questionId" element={<ProtectedRoute><QuestionDetail /></ProtectedRoute>} />
                     <Route path="/ai-interview" element={<ProtectedRoute><AIInterview /></ProtectedRoute>} />
                     <Route path="/ai-interview/:interviewId" element={<ProtectedRoute><InterviewPanel /></ProtectedRoute>} />
                     <Route path="/resume-analyzer" element={<ProtectedRoute><ResumeAnalyzer /></ProtectedRoute>} />
