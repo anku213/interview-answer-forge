@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useUserApiKeys } from "@/hooks/useUserApiKeys";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { CronJobManager } from "@/components/CronJobManager";
 import { 
   Key, 
   Eye, 
@@ -35,7 +35,8 @@ import {
   Monitor,
   Moon,
   Sun,
-  Zap
+  Zap,
+  Clock
 } from "lucide-react";
 import { useDailyCron } from "@/hooks/useDailyCron";
 
@@ -654,6 +655,19 @@ const Settings = () => {
                     </div>
                   )}
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Automated Question Generation */}
+            <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-green-50 to-teal-50 border-b">
+                <CardTitle className="flex items-center gap-3 text-2xl">
+                  <Clock className="h-6 w-6 text-green-600" />
+                  Automated Question Generation
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-8">
+                <CronJobManager />
               </CardContent>
             </Card>
 

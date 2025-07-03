@@ -160,6 +160,45 @@ export type Database = {
           },
         ]
       }
+      cron_configurations: {
+        Row: {
+          configuration: Json | null
+          created_at: string
+          id: string
+          is_active: boolean
+          job_name: string
+          last_run_at: string | null
+          next_run_at: string | null
+          schedule: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          configuration?: Json | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          job_name: string
+          last_run_at?: string | null
+          next_run_at?: string | null
+          schedule: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          configuration?: Json | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          job_name?: string
+          last_run_at?: string | null
+          next_run_at?: string | null
+          schedule?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_challenges: {
         Row: {
           ai_hint: string | null
