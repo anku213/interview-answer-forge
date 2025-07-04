@@ -1,6 +1,5 @@
-
 import { useNavigate, useLocation } from "react-router-dom";
-import { LayoutDashboard, HelpCircle, Code, User, MessageSquare, Settings, Building2, Calendar, FileText, ChevronRight } from "lucide-react";
+import { LayoutDashboard, HelpCircle, Code, User, MessageSquare, Settings, Building2, Calendar, FileText, ChevronRight, Mail } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -48,6 +47,12 @@ const menuItems = [
     url: "/ai-interview",
     icon: MessageSquare,
     badge: "Beta",
+  },
+  {
+    title: "Job Application",
+    url: "/job-application",
+    icon: Mail,
+    badge: null,
   },
   {
     title: "Resume Analyzer",

@@ -19,6 +19,7 @@ import CompanyQuestionsList from "./pages/CompanyQuestionsList";
 import AIInterview from "./pages/AIInterview";
 import InterviewPanel from "./pages/InterviewPanel";
 import ResumeAnalyzer from "./pages/ResumeAnalyzer";
+import JobApplication from "./pages/JobApplication";
 import NotFound from "./pages/NotFound";
 import { useAuth } from "./hooks/useAuth";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -85,6 +86,7 @@ const App = () => {
                     <Route path="/company-questions/:companyId/:questionId" element={<ProtectedRoute><QuestionDetail /></ProtectedRoute>} />
                     <Route path="/ai-interview" element={<ProtectedRoute><AIInterview /></ProtectedRoute>} />
                     <Route path="/ai-interview/:interviewId" element={<ProtectedRoute><InterviewPanel /></ProtectedRoute>} />
+                    <Route path="/job-application" element={<ProtectedRoute><JobApplication /></ProtectedRoute>} />
                     <Route path="/resume-analyzer" element={<ProtectedRoute><ResumeAnalyzer /></ProtectedRoute>} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
