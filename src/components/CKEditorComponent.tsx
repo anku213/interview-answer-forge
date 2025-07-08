@@ -15,6 +15,8 @@ const CKEditorComponent: React.FC<CKEditorComponentProps> = ({
   onChange,
   placeholder = "Write your cover letter here..."
 }) => {
+  console.log("CKEditor component rendered with value:", value);
+  
   return (
     <div className="ck-editor-wrapper">
       <CKEditor
@@ -22,7 +24,14 @@ const CKEditorComponent: React.FC<CKEditorComponentProps> = ({
         data={value}
         onChange={(event, editor) => {
           const data = editor.getData();
+          console.log("CKEditor content changed:", data);
           onChange(data);
+        }}
+        onReady={(editor) => {
+          console.log("CKEditor is ready to use!", editor);
+        }}
+        onError={(error, details) => {
+          console.error("CKEditor error:", error, details);
         }}
         config={{
           placeholder,

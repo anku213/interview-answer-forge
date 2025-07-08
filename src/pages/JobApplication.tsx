@@ -35,6 +35,7 @@ const JobApplication = () => {
   };
 
   const handleCoverLetterChange = (data: string) => {
+    console.log("Cover letter content:", data);
     setFormData(prev => ({
       ...prev,
       coverLetter: data
@@ -330,6 +331,9 @@ const JobApplication = () => {
                   placeholder="Write your cover letter here..."
                 />
               </div>
+              <p className="text-sm text-gray-500 mt-1">
+                Use the rich text editor to format your cover letter
+              </p>
             </div>
             <div>
               <Label htmlFor="resume-upload">
