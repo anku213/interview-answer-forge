@@ -3,10 +3,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Settings, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import CKEditorComponent from "@/components/CKEditorComponent";
 
 const JobApplication = () => {
   const [formData, setFormData] = useState({
@@ -26,19 +26,11 @@ const JobApplication = () => {
   const smtpPassword = localStorage.getItem("smtpPassword");
   const isSmtpConfigured = smtpEmail && smtpPassword;
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
-    }));
-  };
-
-  const handleCoverLetterChange = (data: string) => {
-    console.log("Cover letter content:", data);
-    setFormData(prev => ({
-      ...prev,
-      coverLetter: data
     }));
   };
 
@@ -324,15 +316,17 @@ const JobApplication = () => {
               <Label htmlFor="coverLetter">
                 Cover Letter <span className="text-red-500">*</span>
               </Label>
-              <div className="mt-2">
-                <CKEditorComponent
-                  value={formData.coverLetter}
-                  onChange={handleCoverLetterChange}
-                  placeholder="Write your cover letter here..."
-                />
-              </div>
+              <Textarea
+                id="coverLetter"
+                name="coverLetter"
+                value={formData.coverLetter}
+                onChange={handleInputChange}
+                placeholder="Write your cover letter here..."
+                className="min-h-[200px] resize-y"
+                required
+              />
               <p className="text-sm text-gray-500 mt-1">
-                Use the rich text editor to format your cover letter
+                Write a compelling cover letter explaining why you're the right fit for this position
               </p>
             </div>
             <div>
